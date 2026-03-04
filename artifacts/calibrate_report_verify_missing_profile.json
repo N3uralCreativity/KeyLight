@@ -1,0 +1,15 @@
+{
+  "started_at_utc": "2026-03-03T20:54:06+00:00",
+  "finished_at_utc": "2026-03-03T20:54:06+00:00",
+  "zone_count": 4,
+  "steps_executed": 0,
+  "sweep_report_path": null,
+  "template_output_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\observed_order_template_verify_missing.txt",
+  "profile_output_path": null,
+  "observed_order": null,
+  "profile_built": false,
+  "verify_requested": true,
+  "verify_executed": false,
+  "verify_steps_executed": 0,
+  "verify_report_path": null
+}

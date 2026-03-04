@@ -1,0 +1,20 @@
+{
+  "zone_count": 4,
+  "logical_to_hardware": [
+    2,
+    0,
+    3,
+    1
+  ],
+  "generated_at_utc": "2026-03-04T00:00:00+00:00",
+  "provenance": {
+    "method": "calibrate-zones",
+    "observed_order": [
+      2,
+      0,
+      3,
+      1
+    ],
+    "workflow_report_path": "../../artifacts/calibrate_report_final.json"
+  }
+}

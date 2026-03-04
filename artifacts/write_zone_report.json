@@ -1,0 +1,20 @@
+{
+  "timestamp_utc": "2026-03-03T00:00:00+00:00",
+  "backend": "simulated",
+  "zone_index": 0,
+  "zone_count": 4,
+  "color": {
+    "r": 255,
+    "g": 0,
+    "b": 0
+  },
+  "success": true,
+  "bytes_written": 0,
+  "report_bytes": null,
+  "write_method": "none",
+  "pad_to": null,
+  "hid_path": null,
+  "vendor_id": null,
+  "product_id": null,
+  "error": null
+}

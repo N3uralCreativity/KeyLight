@@ -1,0 +1,39 @@
+{
+  "generated_at_utc": "2026-03-03T22:48:37+00:00",
+  "source_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\live_report_pacing_smoke.json",
+  "source_event_log_path": null,
+  "iterations": 20,
+  "attempted_iterations": 20,
+  "completed_iterations": 20,
+  "error_count": 0,
+  "aborted": false,
+  "error_rate_percent": 0.0,
+  "avg_total_ms": 1.4560049923602492,
+  "configured_fps": 120,
+  "effective_fps": 686.8108318632585,
+  "overrun_iterations": 0,
+  "overrun_percent": 0.0,
+  "p95_total_ms": null,
+  "event_samples": 0,
+  "error_event_samples": 0,
+  "thresholds": {
+    "max_error_rate_percent": 1.0,
+    "max_avg_total_ms": 80.0,
+    "max_p95_total_ms": 120.0,
+    "min_effective_fps": 60.0,
+    "max_overrun_percent": 25.0,
+    "require_no_abort": true,
+    "min_completed_iterations": 1
+  },
+  "pass_checks": [
+    "runtime_not_aborted",
+    "completed_iterations>=1",
+    "error_rate<=1.000%",
+    "avg_total_ms<=80.000",
+    "effective_fps>=60.000",
+    "overrun_percent<=25.000%",
+    "p95_total_ms_skipped_no_event_samples"
+  ],
+  "failed_checks": [],
+  "passed": true
+}

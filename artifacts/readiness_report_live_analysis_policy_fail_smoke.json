@@ -1,0 +1,35 @@
+{
+  "generated_at_utc": "2026-03-03T23:17:48+00:00",
+  "config_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\config\\default.toml",
+  "backend": "simulated",
+  "mapper": "grid",
+  "zone_count": 24,
+  "calibration_profile_path": null,
+  "calibration_workflow_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\calibrate_report_final.json",
+  "preflight_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\preflight_report.json",
+  "live_analysis_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\live_analysis_policy_weak_smoke.json",
+  "hid_path_checked": null,
+  "passed": false,
+  "pass_checks": [
+    "zone_count_resolved=24",
+    "calibration_profile_not_set",
+    "calibration_workflow_check_skipped",
+    "calibration_workflow_verify_check_skipped",
+    "calibration_workflow_age_check_skipped",
+    "preflight_clean_check_skipped",
+    "preflight_admin_check_skipped",
+    "preflight_strict_mode_check_skipped",
+    "preflight_access_denied_check_skipped",
+    "preflight_age_check_skipped",
+    "live_analysis_check_skipped",
+    "live_analysis_age_check_skipped",
+    "hid_presence_check_skipped"
+  ],
+  "failed_checks": [
+    "live_analysis_threshold_max_error_rate_percent_too_weak:report=10.000 required<=1.000",
+    "live_analysis_threshold_max_avg_total_ms_too_weak:report=200.000 required<=80.000",
+    "live_analysis_threshold_max_p95_total_ms_too_weak:report=250.000 required<=120.000",
+    "live_analysis_threshold_min_effective_fps_too_weak:report=5.000 required>=20.000",
+    "live_analysis_threshold_max_overrun_percent_too_weak:report=90.000 required<=25.000"
+  ]
+}

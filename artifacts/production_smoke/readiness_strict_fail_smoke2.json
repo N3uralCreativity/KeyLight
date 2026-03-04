@@ -1,0 +1,42 @@
+{
+  "generated_at_utc": "2026-03-03T23:56:50+00:00",
+  "config_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\config\\hardware-generated.toml",
+  "backend": "msi-mystic-hid",
+  "mapper": "calibrated",
+  "zone_count": 24,
+  "calibration_profile_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\config\\calibration\\observed.json",
+  "calibration_workflow_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\calibrate_report_final.json",
+  "preflight_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\preflight_report.json",
+  "live_analysis_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\live_analysis_report.json",
+  "hid_path_checked": "\\\\?\\HID#VID_1462&PID_1603#6&a3fe5ce&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}",
+  "passed": false,
+  "pass_checks": [
+    "hardware_backend_configured",
+    "calibrated_mapper_configured",
+    "zone_count_resolved=24",
+    "calibration_profile_zone_count_matches_mapper",
+    "calibration_profile_age_check_skipped",
+    "calibration_profile_generated_timestamp_present",
+    "calibration_profile_provenance_method=build-calibration",
+    "calibration_profile_provenance_observed_order_matches_profile",
+    "calibration_profile_provenance_valid",
+    "calibration_workflow_age_check_skipped",
+    "preflight_strict_mode=true",
+    "preflight_report_age_seconds<=900:0",
+    "live_analysis_check_skipped",
+    "live_analysis_threshold_policy_check_skipped",
+    "live_analysis_age_check_skipped",
+    "hid_presence_check_skipped"
+  ],
+  "failed_checks": [
+    "calibration_profile_is_identity",
+    "calibration_profile_provenance_workflow_mismatch:profile=C:\\Users\\leodu\\Downloads\\KeyLight\\config\\calibration\\artifacts\\calibrate_report_final.json config=C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\calibrate_report_final.json",
+    "calibration_workflow_report_error=file_not_found:artifacts\\calibrate_report_final.json",
+    "calibration_workflow_verify_error=file_not_found:artifacts\\calibrate_report_final.json",
+    "calibration_workflow_live_verify_error=file_not_found:artifacts\\calibrate_report_final.json",
+    "calibration_workflow_live_verify_success_error=file_not_found:artifacts\\calibrate_report_final.json",
+    "preflight_unresolved_count=9",
+    "preflight_is_not_admin",
+    "preflight_access_denied_count=9"
+  ]
+}

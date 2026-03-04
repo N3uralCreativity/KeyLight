@@ -1,0 +1,101 @@
+{
+  "generated_at_utc": "2026-03-03T18:41:53+00:00",
+  "platform_name": "Windows-11-10.0.26200-SP0",
+  "python_version": "3.14.0",
+  "is_admin": false,
+  "conflict_processes": [
+    {
+      "process_name": "LEDKeeper2",
+      "pid": 59376
+    },
+    {
+      "process_name": "NVIDIA Overlay",
+      "pid": 4076
+    },
+    {
+      "process_name": "NVIDIA Overlay",
+      "pid": 8680
+    },
+    {
+      "process_name": "NVIDIA Overlay",
+      "pid": 24012
+    },
+    {
+      "process_name": "NVIDIA Overlay",
+      "pid": 31824
+    },
+    {
+      "process_name": "NVIDIA Overlay",
+      "pid": 68580
+    },
+    {
+      "process_name": "logi_lamparray_service",
+      "pid": 9328
+    },
+    {
+      "process_name": "wallpaperservice32",
+      "pid": 9456
+    }
+  ],
+  "candidate_services": [
+    {
+      "name": "MSI Foundation Service",
+      "display_name": "MSI Foundation Service",
+      "state": "Running",
+      "start_mode": "Auto"
+    },
+    {
+      "name": "MSI Sendevsvc",
+      "display_name": "Sensor dev service",
+      "state": "Running",
+      "start_mode": "Auto"
+    },
+    {
+      "name": "MSI_Center_Service",
+      "display_name": "MSI Center Service",
+      "state": "Running",
+      "start_mode": "Auto"
+    },
+    {
+      "name": "MSI_Companion_Service",
+      "display_name": "MSI_Companion_Service",
+      "state": "Stopped",
+      "start_mode": "Auto"
+    }
+  ],
+  "candidate_devices": [
+    {
+      "friendly_name": "HID Keyboard Device",
+      "instance_id": "HID\\VID_046D&PID_C08B&MI_01&COL01\\7&1CC4E018&0&0000",
+      "device_class": "Keyboard",
+      "status": "OK"
+    },
+    {
+      "friendly_name": "HID Keyboard Device",
+      "instance_id": "HID\\CONVERTEDDEVICE&COL01\\5&6175CE0&0&0000",
+      "device_class": "Keyboard",
+      "status": "OK"
+    },
+    {
+      "friendly_name": "HID Keyboard Device",
+      "instance_id": "HID\\INTC816&COL01\\3&3B404111&0&0000",
+      "device_class": "Keyboard",
+      "status": "OK"
+    },
+    {
+      "friendly_name": "Standard PS/2 Keyboard",
+      "instance_id": "ACPI\\MSI0007\\4&EA58A4D&0",
+      "device_class": "Keyboard",
+      "status": "OK"
+    }
+  ],
+  "likely_control_paths": [
+    "MSI Center service bridge path",
+    "Direct HID vendor protocol path"
+  ],
+  "recommendations": [
+    "Run scripts/preflight.ps1 (ideally as Administrator) before hardware tests.",
+    "Run terminal as Administrator for stronger process/service/device access.",
+    "Next: implement zone write probe and run 0..23 sweep calibration."
+  ]
+}

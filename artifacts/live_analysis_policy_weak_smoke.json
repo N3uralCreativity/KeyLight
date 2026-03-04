@@ -1,0 +1,31 @@
+{
+  "generated_at_utc": "2026-03-04T00:00:00Z",
+  "source_report_path": "C:/tmp/live_report.json",
+  "source_event_log_path": null,
+  "iterations": 300,
+  "attempted_iterations": 300,
+  "completed_iterations": 300,
+  "error_count": 0,
+  "aborted": false,
+  "error_rate_percent": 0.0,
+  "avg_total_ms": 10.0,
+  "configured_fps": 30,
+  "effective_fps": 30.0,
+  "overrun_iterations": 0,
+  "overrun_percent": 0.0,
+  "p95_total_ms": 20.0,
+  "event_samples": 300,
+  "error_event_samples": 0,
+  "thresholds": {
+    "max_error_rate_percent": 10.0,
+    "max_avg_total_ms": 200.0,
+    "max_p95_total_ms": 250.0,
+    "min_effective_fps": 5.0,
+    "max_overrun_percent": 90.0,
+    "require_no_abort": false,
+    "min_completed_iterations": 1
+  },
+  "pass_checks": ["x"],
+  "failed_checks": [],
+  "passed": true
+}

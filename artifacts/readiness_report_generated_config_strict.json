@@ -1,0 +1,26 @@
+{
+  "generated_at_utc": "2026-03-03T22:16:04+00:00",
+  "config_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\config\\hardware-generated.toml",
+  "backend": "msi-mystic-hid",
+  "mapper": "calibrated",
+  "zone_count": 24,
+  "calibration_profile_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\config\\calibration\\observed.json",
+  "preflight_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\preflight_report.json",
+  "live_analysis_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\live_analysis_report.json",
+  "hid_path_checked": "\\\\?\\HID#VID_1462&PID_1603#6&a3fe5ce&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}",
+  "passed": false,
+  "pass_checks": [
+    "hardware_backend_configured",
+    "calibrated_mapper_configured",
+    "zone_count_resolved=24",
+    "calibration_profile_zone_count_matches_mapper",
+    "preflight_report_age_seconds<=900:7",
+    "live_analysis_check_skipped",
+    "live_analysis_age_check_skipped",
+    "hid_presence_check_skipped"
+  ],
+  "failed_checks": [
+    "calibration_profile_is_identity",
+    "preflight_unresolved_count=9"
+  ]
+}

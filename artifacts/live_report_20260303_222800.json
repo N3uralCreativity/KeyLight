@@ -1,0 +1,20 @@
+{
+  "started_at_utc": "2026-03-03T21:28:00+00:00",
+  "finished_at_utc": "2026-03-03T21:28:02+00:00",
+  "iterations": 60,
+  "attempted_iterations": 60,
+  "completed_iterations": 60,
+  "error_count": 0,
+  "max_consecutive_errors": 0,
+  "aborted": false,
+  "last_error": null,
+  "recovery_attempts": 0,
+  "recovery_successes": 0,
+  "avg_capture_ms": 0.880288324939708,
+  "avg_map_ms": 0.21337500268903872,
+  "avg_process_ms": 0.02044333959929645,
+  "avg_send_ms": 0.0021716715612759194,
+  "avg_total_ms": 1.1182516696862876,
+  "watchdog_emits": 60,
+  "event_log_emits": 60
+}

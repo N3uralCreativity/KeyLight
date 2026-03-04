@@ -1,0 +1,20 @@
+{
+  "timestamp_utc": "2026-03-03T20:01:24+00:00",
+  "backend": "msi-mystic-hid",
+  "zone_index": 0,
+  "zone_count": 24,
+  "color": {
+    "r": 255,
+    "g": 0,
+    "b": 0
+  },
+  "success": true,
+  "bytes_written": 0,
+  "report_bytes": null,
+  "write_method": "output",
+  "pad_to": 64,
+  "hid_path": "\\\\?\\HID#VID_1462&PID_1603#6&a3fe5ce&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}",
+  "vendor_id": null,
+  "product_id": null,
+  "error": null
+}

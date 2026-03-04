@@ -1,0 +1,14 @@
+[app]
+rows = 2
+columns = 2
+fps = 30
+iterations = 10
+
+[capture]
+backend = "mock"
+width = 4
+height = 2
+
+[driver]
+backend = "simulated"
+calibration_profile = "../config/calibration/final_workflow_smoke.json"

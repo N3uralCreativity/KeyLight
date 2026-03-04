@@ -1,0 +1,42 @@
+{
+  "started_at_utc": "2026-03-03T20:48:43+00:00",
+  "finished_at_utc": "2026-03-03T20:48:43+00:00",
+  "config": {
+    "zone_count": 4,
+    "loops": 1,
+    "step_delay_ms": 0,
+    "reverse": false,
+    "active_color": {
+      "r": 255,
+      "g": 0,
+      "b": 0
+    },
+    "inactive_color": {
+      "r": 0,
+      "g": 0,
+      "b": 0
+    }
+  },
+  "steps": [
+    {
+      "loop_index": 0,
+      "zone_index": 0,
+      "timestamp_utc": "2026-03-03T20:48:43+00:00"
+    },
+    {
+      "loop_index": 0,
+      "zone_index": 1,
+      "timestamp_utc": "2026-03-03T20:48:43+00:00"
+    },
+    {
+      "loop_index": 0,
+      "zone_index": 2,
+      "timestamp_utc": "2026-03-03T20:48:43+00:00"
+    },
+    {
+      "loop_index": 0,
+      "zone_index": 3,
+      "timestamp_utc": "2026-03-03T20:48:43+00:00"
+    }
+  ]
+}

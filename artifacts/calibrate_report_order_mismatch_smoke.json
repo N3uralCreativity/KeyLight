@@ -1,0 +1,9 @@
+{
+  "finished_at_utc": "2026-03-04T00:00:10Z",
+  "zone_count": 4,
+  "profile_built": true,
+  "observed_order": [0,1,2,3],
+  "profile_output_path": "../config/calibration/final_workflow_smoke.json",
+  "verify_executed": true,
+  "verify_steps_executed": 4
+}

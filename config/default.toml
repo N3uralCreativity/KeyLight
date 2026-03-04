@@ -1,0 +1,47 @@
+[app]
+fps = 30
+rows = 2
+columns = 12
+iterations = 300
+
+[capture]
+backend = "windows-mss"
+monitor_index = 1
+width = 120
+height = 20
+
+[mapping]
+backend = "grid"
+zone_profile = "mapping/msi_vector16_2x12.json"
+
+[driver]
+backend = "simulated"
+hid_path = ""
+vendor_id = "0x1462"
+product_id = "0x1603"
+report_id = 1
+write_method = "output"
+pad_length = 64
+packet_template = "{report_id} {zone} {r} {g} {b}"
+calibration_profile = ""
+
+[smoothing]
+enabled = false
+alpha = 0.25
+
+[brightness]
+max_percent = 100
+
+[runtime]
+max_consecutive_errors = 5
+error_backoff_ms = 250
+stop_on_error = false
+strict_preflight = false
+reconnect_on_error = true
+reconnect_attempts = 1
+watchdog_interval_iterations = 0
+watchdog_output = ""
+event_log_interval_iterations = 0
+event_log_output = ""
+restore_on_exit = false
+restore_color = "0,0,0"

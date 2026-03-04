@@ -1,0 +1,33 @@
+{
+  "generated_at_utc": "2026-03-03T23:23:27+00:00",
+  "config_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\runtime_workflow_smoke.toml",
+  "backend": "simulated",
+  "mapper": "grid",
+  "zone_count": 4,
+  "calibration_profile_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\config\\calibration\\final_workflow_smoke.json",
+  "calibration_workflow_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\calibrate_report_live_verify_fail_smoke.json",
+  "preflight_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\preflight_report.json",
+  "live_analysis_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\live_analysis_report.json",
+  "hid_path_checked": null,
+  "passed": false,
+  "pass_checks": [
+    "zone_count_resolved=4",
+    "calibration_profile_zone_count_matches_mapper",
+    "calibration_workflow_check_skipped",
+    "calibration_workflow_verify_check_skipped",
+    "calibration_workflow_live_verify_check_skipped",
+    "calibration_workflow_age_check_skipped",
+    "preflight_clean_check_skipped",
+    "preflight_admin_check_skipped",
+    "preflight_strict_mode_check_skipped",
+    "preflight_access_denied_check_skipped",
+    "preflight_age_check_skipped",
+    "live_analysis_check_skipped",
+    "live_analysis_threshold_policy_check_skipped",
+    "live_analysis_age_check_skipped",
+    "hid_presence_check_skipped"
+  ],
+  "failed_checks": [
+    "calibration_workflow_live_verify_failed:live_verify_executed=True live_verify_error=runtime failed"
+  ]
+}

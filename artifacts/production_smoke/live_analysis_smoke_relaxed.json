@@ -1,0 +1,39 @@
+{
+  "generated_at_utc": "2026-03-03T23:55:57+00:00",
+  "source_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\production_smoke\\live_smoke_relaxed.json",
+  "source_event_log_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\production_smoke\\live_events_smoke_relaxed.jsonl",
+  "iterations": 6,
+  "attempted_iterations": 6,
+  "completed_iterations": 6,
+  "error_count": 0,
+  "aborted": false,
+  "error_rate_percent": 0.0,
+  "avg_total_ms": 67.48636666452512,
+  "configured_fps": 30,
+  "effective_fps": 14.817807646557744,
+  "overrun_iterations": 6,
+  "overrun_percent": 100.0,
+  "p95_total_ms": 183.64370008930564,
+  "event_samples": 6,
+  "error_event_samples": 0,
+  "thresholds": {
+    "max_error_rate_percent": 1.0,
+    "max_avg_total_ms": 80.0,
+    "max_p95_total_ms": 400.0,
+    "min_effective_fps": 5.0,
+    "max_overrun_percent": 100.0,
+    "require_no_abort": true,
+    "min_completed_iterations": 1
+  },
+  "pass_checks": [
+    "runtime_not_aborted",
+    "completed_iterations>=1",
+    "error_rate<=1.000%",
+    "avg_total_ms<=80.000",
+    "effective_fps>=5.000",
+    "overrun_percent<=100.000%",
+    "p95_total_ms<=400.000"
+  ],
+  "failed_checks": [],
+  "passed": true
+}

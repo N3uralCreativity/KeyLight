@@ -1,0 +1,23 @@
+{
+  "started_at_utc": "2026-03-03T21:36:46+00:00",
+  "finished_at_utc": "2026-03-03T21:36:46+00:00",
+  "iterations": 2,
+  "attempted_iterations": 2,
+  "completed_iterations": 2,
+  "error_count": 0,
+  "max_consecutive_errors": 0,
+  "aborted": false,
+  "last_error": null,
+  "recovery_attempts": 0,
+  "recovery_successes": 0,
+  "avg_capture_ms": 0.8331500575877726,
+  "avg_map_ms": 0.1439000479876995,
+  "avg_process_ms": 0.0075999414548277855,
+  "avg_send_ms": 0.0014500110410153866,
+  "avg_total_ms": 0.9880000143311918,
+  "watchdog_emits": 0,
+  "event_log_emits": 0,
+  "restore_requested": true,
+  "restore_applied": true,
+  "restore_error": null
+}

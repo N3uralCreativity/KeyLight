@@ -1,0 +1,22 @@
+{
+  "generated_at_utc": "2026-03-03T21:58:54+00:00",
+  "config_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\config\\default.toml",
+  "backend": "simulated",
+  "mapper": "grid",
+  "zone_count": 24,
+  "calibration_profile_path": null,
+  "preflight_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\preflight_report.json",
+  "live_analysis_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\live_analysis_20260303_223726.json",
+  "hid_path_checked": null,
+  "passed": false,
+  "pass_checks": [
+    "zone_count_resolved=24",
+    "calibration_profile_not_set",
+    "live_analysis_passed",
+    "hid_presence_check_skipped"
+  ],
+  "failed_checks": [
+    "backend_is_not_hardware:simulated",
+    "preflight_unresolved_count=9"
+  ]
+}

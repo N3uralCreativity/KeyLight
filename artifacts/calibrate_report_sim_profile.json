@@ -1,0 +1,16 @@
+{
+  "started_at_utc": "2026-03-03T20:48:43+00:00",
+  "finished_at_utc": "2026-03-03T20:48:43+00:00",
+  "zone_count": 4,
+  "steps_executed": 4,
+  "sweep_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\calibrate_sweep_sim_profile.json",
+  "template_output_path": null,
+  "profile_output_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\config\\calibration\\final_sim.json",
+  "observed_order": [
+    2,
+    0,
+    3,
+    1
+  ],
+  "profile_built": true
+}

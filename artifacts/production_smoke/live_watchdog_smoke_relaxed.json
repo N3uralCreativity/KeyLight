@@ -1,0 +1,12 @@
+{
+  "timestamp_utc": "2026-03-03T23:55:57+00:00",
+  "iterations": 6,
+  "attempted_iterations": 6,
+  "completed_iterations": 6,
+  "error_count": 0,
+  "consecutive_errors": 0,
+  "aborted": false,
+  "last_error": null,
+  "recovery_attempts": 0,
+  "recovery_successes": 0
+}

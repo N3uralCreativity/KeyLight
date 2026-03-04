@@ -1,0 +1,16 @@
+{
+  "started_at_utc": "2026-03-03T20:57:30+00:00",
+  "finished_at_utc": "2026-03-03T20:57:30+00:00",
+  "iterations": 3,
+  "attempted_iterations": 3,
+  "completed_iterations": 3,
+  "error_count": 0,
+  "max_consecutive_errors": 0,
+  "aborted": false,
+  "last_error": null,
+  "avg_capture_ms": 0.8639000200976928,
+  "avg_map_ms": 0.14339996657023826,
+  "avg_process_ms": 0.007066720475753148,
+  "avg_send_ms": 0.0071999384090304375,
+  "avg_total_ms": 1.0228333218644063
+}

@@ -1,0 +1,28 @@
+﻿{
+    "strict_mode":  true,
+    "generated_at_utc":  "2026-03-04T00:26:01.0111507Z",
+    "detected":  {
+                     "ProcessName":  "logi_lamparray_service",
+                     "Id":  44780,
+                     "Category":  "RGB",
+                     "Mode":  "Close",
+                     "Reason":  "Ambient lamparray effect service can conflict."
+                 },
+    "resolutions":  {
+                        "ProcessName":  "logi_lamparray_service",
+                        "Id":  44780,
+                        "Category":  "RGB",
+                        "Mode":  "Close",
+                        "Status":  "Closed",
+                        "Note":  "Process terminated."
+                    },
+    "close_conflicts":  true,
+    "unresolved_count":  0,
+    "access_denied_count":  0,
+    "detected_count":  1,
+    "include_overlay_conflicts":  true,
+    "closed_count":  1,
+    "warn_count":  0,
+    "aggressive_msi_close":  true,
+    "is_admin":  true
+}

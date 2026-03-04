@@ -1,0 +1,24 @@
+{
+  "started_at_utc": "2026-03-03T23:09:29+00:00",
+  "finished_at_utc": "2026-03-03T23:09:30+00:00",
+  "zone_count": 4,
+  "steps_executed": 4,
+  "sweep_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\calibrate_sweep_report.json",
+  "template_output_path": null,
+  "profile_output_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\config\\calibration\\final_workflow_smoke.json",
+  "observed_order": [
+    1,
+    0,
+    3,
+    2
+  ],
+  "profile_built": true,
+  "verify_requested": true,
+  "verify_executed": true,
+  "verify_steps_executed": 4,
+  "verify_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\calibrate_verify_readiness_workflow_smoke.json",
+  "live_verify_requested": false,
+  "live_verify_executed": false,
+  "live_verify_report_path": null,
+  "live_verify_error": null
+}

@@ -1,0 +1,31 @@
+{
+  "generated_at_utc": "2026-03-03T21:59:47+00:00",
+  "source_report_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\live_report_20260303_225945.json",
+  "source_event_log_path": "C:\\Users\\leodu\\Downloads\\KeyLight\\artifacts\\live_events_20260303_225945.jsonl",
+  "iterations": 30,
+  "attempted_iterations": 30,
+  "completed_iterations": 30,
+  "error_count": 0,
+  "aborted": false,
+  "error_rate_percent": 0.0,
+  "avg_total_ms": 1.6805066533076265,
+  "p95_total_ms": 2.5092000141739845,
+  "event_samples": 30,
+  "error_event_samples": 0,
+  "thresholds": {
+    "max_error_rate_percent": 1.0,
+    "max_avg_total_ms": 80.0,
+    "max_p95_total_ms": 120.0,
+    "require_no_abort": true,
+    "min_completed_iterations": 1
+  },
+  "pass_checks": [
+    "runtime_not_aborted",
+    "completed_iterations>=1",
+    "error_rate<=1.000%",
+    "avg_total_ms<=80.000",
+    "p95_total_ms<=120.000"
+  ],
+  "failed_checks": [],
+  "passed": true
+}
