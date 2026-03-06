@@ -14,6 +14,10 @@ Default Tray View :
 
 ![Demo](docs/Screenshot-2026-03-06-035210.png)
 
+wpa 
+
+![Demo](docs/Screenshot-2026-03-06-175544.png)
+
 Initial target hardware:
 - MSI Vector 16 HX AI A2XW
 - 24-zone RGB keyboard
