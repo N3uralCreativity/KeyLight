@@ -3,7 +3,12 @@
 KeyLight is a Windows-first RGB sync app that maps screen colors to keyboard lighting zones in real time.
 
 ![Demo](docs/ezgif-82972e6aedaf154a.gif)
+
+Settings Interface :
 ![Demo](docs/Screenshot-2026-03-06-034907.png)
+
+Default Tray View : 
+![Demo](docs/Screenshot-2026-03-06-035210.png)
 
 Initial target hardware:
 - MSI Vector 16 HX AI A2XW
