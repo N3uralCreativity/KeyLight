@@ -19,6 +19,10 @@ hw = [
 capture = [
   "mss>=10.1.0",
 ]
+ui = [
+  "pillow>=10.3.0",
+  "pystray>=0.19.5",
+]
 dev = [
   "mypy>=1.15.0",
   "pytest>=8.3.0",
@@ -27,6 +31,7 @@ dev = [
 
 [project.scripts]
 keylight = "keylight.cli:main"
+keylight-app = "keylight.app:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

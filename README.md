@@ -45,6 +45,7 @@ python -m keylight.cli sweep --zone-count 24 --loops 1 --delay-ms 350
 python -m keylight.cli write-zone --backend simulated --zone-index 0 --color 255,0,0
 python -m keylight.cli discover-hid --hid-path "<PATH>"
 python -m keylight.cli discover-effects --hid-path "<PATH>" --step-delay-ms 1200
+python -m keylight.cli discover-zone-protocol --hid-path "<PATH>" --step-delay-ms 1200 --default-offsets --output artifacts/zone_protocol_verify_report.json
 python -m keylight.cli sweep --backend msi-mystic-hid --hid-path "<PATH>" --zone-count 24 --loops 1 --delay-ms 350
 python -m keylight.cli init-calibration --zone-count 24 --output config/calibration/default.json
 python -m keylight.cli build-calibration --zone-count 24 --order "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23"
@@ -64,7 +65,18 @@ python -m keylight.cli run-production --config config/hardware-generated.toml --
 python -m keylight.cli readiness-check --config config/default.toml --run-preflight --preflight-strict-mode --preflight-aggressive-msi-close --require-hardware-backend --require-calibrated-mapper --require-calibration-profile --require-calibration-profile-generated-timestamp --require-calibration-profile-provenance --require-calibration-profile-provenance-workflow-match --max-calibration-profile-age-seconds 3600 --require-calibration-workflow --require-calibration-verify-executed --require-calibration-live-verify-executed --require-calibration-live-verify-success --calibration-workflow-report artifacts/calibrate_report_final.json --max-calibration-workflow-age-seconds 3600 --forbid-identity-calibration --require-preflight-clean --require-preflight-admin --require-preflight-strict-mode --require-preflight-access-denied-clear --max-preflight-age-seconds 900 --require-live-analysis-pass --live-analysis-report artifacts/live_analysis_report.json --max-live-analysis-age-seconds 21600 --max-live-analysis-threshold-max-error-rate-percent 1 --max-live-analysis-threshold-max-avg-total-ms 80 --max-live-analysis-threshold-max-p95-total-ms 120 --min-live-analysis-threshold-min-effective-fps 20 --max-live-analysis-threshold-max-overrun-percent 25 --output artifacts/readiness_report.json
 python -m keylight.cli live --capturer mock --mapper calibrated --zone-profile config/mapping/msi_vector16_2x12.json --backend simulated --iterations 10 --output artifacts/live_report.json
 python -m keylight.cli live --capturer windows-mss --backend msi-mystic-hid --hid-path "<PATH>" --rows 2 --columns 12 --fps 30 --iterations 300 --calibration-profile config/calibration/final.json --strict-preflight --output artifacts/live_report.json
+python -m keylight.app
+keylight-app
+scripts\launch-app.ps1
+Start-KeyLight-App.cmd
 ```
+
+For one-click usage on Windows (no terminal commands), double-click `Start-KeyLight-App.cmd`.
+It requests Administrator elevation, auto-detects MSI HID path, autostarts live mode, and keeps running until manually stopped.
+Close button now minimizes to tray. Right-click tray icon for `Pause`, `Resume`, `Open Settings`, and `Exit`.
+On first run it may install missing app dependencies (`hw,capture,ui`) before showing the interface.
+Launcher default is start hidden in tray. To start with the window visible, run `scripts\launch-app.ps1 -ShowWindow`.
+The launcher host is hidden by default (`powershell` hidden + `pythonw.exe`) so no admin console stays visible.
 
 `preflight.ps1` detects and closes known conflicting RGB/overlay apps before running KeyLight.
 Each preflight run writes a structured report to `artifacts/preflight_report.json`.
@@ -111,6 +123,19 @@ Use `--max-preflight-age-seconds` and `--max-live-analysis-age-seconds` to block
 `build-zone-profile` generates calibrated mapping JSON from weights/ranges without manual profile editing.
 `calibrate-zones` runs sweep + observed-order workflow and can run an immediate verification sweep (`--verify`).
 `calibrate-zones --verify-live` runs a short live runtime with the resolved calibration profile and writes a live verification report.
+
+## MSI Vector 16 HID Status (2026-03-06)
+
+- A working MSI Center HID protocol has been verified from USB capture (`artifacts/RECORD .pcapng`).
+- A per-zone MSI Center HID protocol has been identified from `artifacts/ZonesRecord.pcapng`:
+  - zone mask packet `02 01 <bitmask-le32> ...`
+  - color packet `02 02 01 58 02 00 32 08 01 01 00 R G B 64 R G B ...`
+- `MsiMysticHidDriver` now defaults to `msi-center-feature-zones` for real zone-targeted writes.
+- Quick hardware sanity test:
+
+```powershell
+.\.venv\Scripts\python.exe -m keylight.cli write-zone --backend msi-mystic-hid --hid-path "<PATH>" --zone-index 0 --zone-count 24 --color 255,0,0 --strict-preflight --aggressive-msi-close
+```
 
 ## Next Focus
 

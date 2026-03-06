@@ -77,6 +77,13 @@ from keylight.write_zone import (
     execute_write_zone,
     write_write_zone_report,
 )
+from keylight.zone_protocol_verify import (
+    ZoneProtocolVerifyConfig,
+    ZoneProtocolVerifyStep,
+    default_zone_probe_offsets,
+    run_zone_protocol_verify,
+    write_zone_protocol_verify_report,
+)
 
 
 def _build_run_parser() -> argparse.ArgumentParser:
@@ -414,6 +421,100 @@ def _build_discover_effects_parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path("artifacts/effect_verify_report.json"),
         help="Path for effect verification report",
+    )
+    parser.add_argument(
+        "--print-json",
+        action="store_true",
+        help="Print full verification JSON",
+    )
+    return parser
+
+
+def _build_discover_zone_protocol_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="KeyLight MSI zone-protocol verifier")
+    parser.add_argument("--hid-path", type=str, default=None, help="Target HID path")
+    parser.add_argument("--vendor-id", type=str, default=None, help="Target VID")
+    parser.add_argument("--product-id", type=str, default=None, help="Target PID")
+    parser.add_argument(
+        "--zone-sequence",
+        type=str,
+        default="0,5,11,17,23",
+        help="Comma-separated zone indexes injected into candidate offsets",
+    )
+    parser.add_argument(
+        "--offsets",
+        type=str,
+        default="3,4,5,6,7,8,9,10,14,18,19,20,21,22,23,24",
+        help="Comma-separated color-packet byte offsets to inject with zone index",
+    )
+    parser.add_argument(
+        "--step-delay-ms",
+        type=int,
+        default=1200,
+        help="Delay between visual verification steps",
+    )
+    parser.add_argument("--repeat", type=int, default=1, help="How many cycles of offset set")
+    parser.add_argument(
+        "--max-steps",
+        type=int,
+        default=None,
+        help="Optional cap on number of verification steps",
+    )
+    parser.add_argument(
+        "--pad-length",
+        type=int,
+        default=64,
+        help="Packet length for MSI feature reports",
+    )
+    parser.add_argument(
+        "--brightness",
+        type=int,
+        default=0x64,
+        help="Brightness byte used in the base MSI color packet",
+    )
+    parser.add_argument(
+        "--transition",
+        type=int,
+        default=0x32,
+        help="Transition byte used in the base MSI color packet",
+    )
+    parser.add_argument(
+        "--profile-slot",
+        type=int,
+        default=0x58,
+        help="Profile slot byte used in the base MSI color packet",
+    )
+    parser.add_argument(
+        "--effect-code",
+        type=int,
+        default=0x08,
+        help="Effect code byte used in the base MSI color packet",
+    )
+    parser.add_argument(
+        "--default-offsets",
+        action="store_true",
+        help="Use built-in default offset list and ignore --offsets",
+    )
+    parser.add_argument(
+        "--no-preflight",
+        action="store_true",
+        help="Skip scripts/preflight.ps1 before zone-protocol verification",
+    )
+    parser.add_argument(
+        "--strict-preflight",
+        action="store_true",
+        help="Fail startup if preflight reports unresolved conflicts",
+    )
+    parser.add_argument(
+        "--aggressive-msi-close",
+        action="store_true",
+        help="Use aggressive MSI close mode in preflight",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("artifacts/zone_protocol_verify_report.json"),
+        help="Path for zone protocol verification report",
     )
     parser.add_argument(
         "--print-json",
@@ -1881,6 +1982,75 @@ def _discover_effects_command(argv: list[str]) -> int:
     return 0 if report.success_count > 0 else 1
 
 
+def _discover_zone_protocol_command(argv: list[str]) -> int:
+    args = _build_discover_zone_protocol_parser().parse_args(argv)
+    if not args.no_preflight:
+        preflight_exit_code = _run_preflight_with_mode(
+            aggressive_msi_close=args.aggressive_msi_close,
+            strict_preflight=args.strict_preflight,
+        )
+        if preflight_exit_code != 0:
+            print(f"Preflight failed with exit code {preflight_exit_code}.")
+            return preflight_exit_code
+
+    try:
+        vendor_id = _parse_optional_int(args.vendor_id)
+        product_id = _parse_optional_int(args.product_id)
+        zone_sequence = _parse_csv_int_list(args.zone_sequence)
+        if any(zone < 0 for zone in zone_sequence):
+            raise ValueError("zone-sequence values must be non-negative.")
+        if args.default_offsets:
+            offsets = default_zone_probe_offsets()
+        else:
+            offsets = _parse_csv_int_list(args.offsets)
+        config = ZoneProtocolVerifyConfig(
+            hid_path=args.hid_path,
+            vendor_id=vendor_id,
+            product_id=product_id,
+            zone_sequence=zone_sequence,
+            color_sequence=default_color_sequence(),
+            offsets=offsets,
+            step_delay_ms=args.step_delay_ms,
+            repeat=args.repeat,
+            max_steps=args.max_steps,
+            pad_length=args.pad_length,
+            brightness=args.brightness,
+            transition=args.transition,
+            profile_slot=args.profile_slot,
+            effect_code=args.effect_code,
+        )
+    except ValueError as error:
+        print(f"Zone protocol verification configuration error: {error}")
+        return 2
+
+    print("Zone protocol verification starting.")
+    print(
+        "Watch keyboard and note step indexes where injected offset changes behavior "
+        "(especially zone-localized effects)."
+    )
+
+    def on_step(step: ZoneProtocolVerifyStep) -> None:
+        marker = "OK" if step.success else "FAIL"
+        print(
+            f"[{marker}] step={step.step_index} offset={step.offset} zone={step.zone_index} "
+            f"orig={step.original_value} new={step.injected_value} "
+            f"color={step.color.r},{step.color.g},{step.color.b}"
+        )
+
+    report = run_zone_protocol_verify(config, on_step=on_step)
+    output_path = write_zone_protocol_verify_report(report, args.output)
+
+    print("Zone protocol verification completed.")
+    print(f"Total steps: {report.total_steps}")
+    print(f"Successful writes: {report.success_count}")
+    print(f"Report written to: {output_path.resolve()}")
+
+    if args.print_json:
+        print(json.dumps(report.to_dict(), indent=2))
+
+    return 0 if report.success_count > 0 else 1
+
+
 def _init_calibration_command(argv: list[str]) -> int:
     args = _build_init_calibration_parser().parse_args(argv)
     try:
@@ -2594,6 +2764,8 @@ def _runtime_config_command(argv: list[str]) -> int:
                 mapper="calibrated",
                 capturer="windows-mss",
                 strict_preflight=True,
+                write_method="feature",
+                pad_length=64,
             )
         if args.set_longrun_mode:
             defaults = replace(
@@ -3193,6 +3365,8 @@ def main(argv: list[str] | None = None) -> int:
             return _discover_hid_command(raw_args[1:])
         if raw_args[0] == "discover-effects":
             return _discover_effects_command(raw_args[1:])
+        if raw_args[0] == "discover-zone-protocol":
+            return _discover_zone_protocol_command(raw_args[1:])
         if raw_args[0] == "init-calibration":
             return _init_calibration_command(raw_args[1:])
         if raw_args[0] == "build-calibration":

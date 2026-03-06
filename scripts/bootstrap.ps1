@@ -1,6 +1,7 @@
 param(
   [bool]$WithHardware = $false,
-  [bool]$WithCapture = $true
+  [bool]$WithCapture = $true,
+  [bool]$WithUi = $true
 )
 
 $ErrorActionPreference = "Stop"
@@ -18,6 +19,9 @@ if ($WithHardware) {
 }
 if ($WithCapture) {
   $extras += "capture"
+}
+if ($WithUi) {
+  $extras += "ui"
 }
 
 $extraSpec = ($extras -join ",")

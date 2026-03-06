@@ -18,6 +18,12 @@ class MsiMysticHidConfig:
     write_method: str = "output"
     pad_length: int = 64
     zone_count: int = 24
+    protocol: str = "msi-center-feature-zones"
+    global_color_strategy: str = "max-brightness"
+    msi_center_brightness: int = 0x64
+    msi_center_transition: int = 0x32
+    msi_center_profile_slot: int = 0x58
+    msi_center_effect_code: int = 0x08
 
     def validate(self) -> None:
         if self.vendor_id < 0 or self.vendor_id > 0xFFFF:
@@ -32,6 +38,25 @@ class MsiMysticHidConfig:
             raise ValueError("pad_length must be positive")
         if self.zone_count <= 0:
             raise ValueError("zone_count must be positive")
+        if self.protocol not in {
+            "legacy-zone",
+            "msi-center-feature-global",
+            "msi-center-feature-zones",
+        }:
+            raise ValueError(
+                "protocol must be 'legacy-zone', 'msi-center-feature-global', "
+                "or 'msi-center-feature-zones'"
+            )
+        if self.global_color_strategy not in {"max-brightness", "average"}:
+            raise ValueError("global_color_strategy must be 'max-brightness' or 'average'")
+        if self.msi_center_brightness < 0 or self.msi_center_brightness > 255:
+            raise ValueError("msi_center_brightness must be in range 0..255")
+        if self.msi_center_transition < 0 or self.msi_center_transition > 255:
+            raise ValueError("msi_center_transition must be in range 0..255")
+        if self.msi_center_profile_slot < 0 or self.msi_center_profile_slot > 255:
+            raise ValueError("msi_center_profile_slot must be in range 0..255")
+        if self.msi_center_effect_code < 0 or self.msi_center_effect_code > 255:
+            raise ValueError("msi_center_effect_code must be in range 0..255")
 
 
 class MsiMysticHidDriver:
@@ -49,15 +74,30 @@ class MsiMysticHidDriver:
         self._device_enumerator = device_enumerator
         self._active_hid_path: str | None = config.hid_path
         self._last_zone_colors: dict[int, RgbColor] = {}
+        self._last_global_color: RgbColor | None = None
 
     def apply_zone_colors(self, zones: list[ZoneColor]) -> None:
-        for zone in sorted(zones, key=lambda item: item.zone_index):
+        for zone in zones:
             zone_index = zone.zone_index
             if zone_index < 0 or zone_index >= self._config.zone_count:
                 raise ValueError(
                     f"zone_index {zone_index} is outside configured zone_count "
                     f"{self._config.zone_count}"
                 )
+
+        if self._config.protocol == "legacy-zone":
+            self._apply_legacy_zone_packets(zones)
+            return
+
+        if self._config.protocol == "msi-center-feature-global":
+            self._apply_msi_center_global(zones)
+            return
+
+        self._apply_msi_center_zone_packets(zones)
+
+    def _apply_legacy_zone_packets(self, zones: list[ZoneColor]) -> None:
+        for zone in sorted(zones, key=lambda item: item.zone_index):
+            zone_index = zone.zone_index
 
             clamped_color = zone.color.clamped()
             previous = self._last_zone_colors.get(zone_index)
@@ -72,12 +112,20 @@ class MsiMysticHidDriver:
                 pad_length=self._config.pad_length,
             )
             try:
-                written = self._write_packet(packet=packet, hid_path=self._active_hid_path)
+                written = self._write_packet(
+                    packet=packet,
+                    hid_path=self._active_hid_path,
+                    write_method=self._config.write_method,
+                )
             except (RuntimeError, OSError) as original_error:
                 if self._active_hid_path is None:
                     raise
                 try:
-                    written = self._write_packet(packet=packet, hid_path=None)
+                    written = self._write_packet(
+                        packet=packet,
+                        hid_path=None,
+                        write_method=self._config.write_method,
+                    )
                 except (RuntimeError, OSError):
                     raise original_error from None
                 self._active_hid_path = None
@@ -88,21 +136,134 @@ class MsiMysticHidDriver:
                 )
             self._last_zone_colors[zone_index] = clamped_color
 
+    def _apply_msi_center_global(self, zones: list[ZoneColor]) -> None:
+        selected = _select_global_color(
+            zones=zones,
+            strategy=self._config.global_color_strategy,
+        )
+        if self._last_global_color == selected:
+            return
+
+        prep_packet = _build_msi_center_prep_packet(pad_length=self._config.pad_length)
+        color_packet = _build_msi_center_color_packet(
+            color=selected,
+            brightness=self._config.msi_center_brightness,
+            transition=self._config.msi_center_transition,
+            profile_slot=self._config.msi_center_profile_slot,
+            effect_code=self._config.msi_center_effect_code,
+            pad_length=self._config.pad_length,
+        )
+        try:
+            self._write_packet(
+                packet=prep_packet,
+                hid_path=self._active_hid_path,
+                write_method="feature",
+            )
+            written = self._write_packet(
+                packet=color_packet,
+                hid_path=self._active_hid_path,
+                write_method="feature",
+            )
+        except (RuntimeError, OSError) as original_error:
+            if self._active_hid_path is None:
+                raise
+            try:
+                self._write_packet(
+                    packet=prep_packet,
+                    hid_path=None,
+                    write_method="feature",
+                )
+                written = self._write_packet(
+                    packet=color_packet,
+                    hid_path=None,
+                    write_method="feature",
+                )
+            except (RuntimeError, OSError):
+                raise original_error from None
+            self._active_hid_path = None
+        if written <= 0:
+            raise RuntimeError(
+                f"MSI HID write returned non-positive byte count ({written}) for global color."
+            )
+        self._last_global_color = selected
+
+    def _apply_msi_center_zone_packets(self, zones: list[ZoneColor]) -> None:
+        for zone in sorted(zones, key=lambda item: item.zone_index):
+            zone_index = zone.zone_index
+            clamped_color = zone.color.clamped()
+            previous = self._last_zone_colors.get(zone_index)
+            if previous == clamped_color:
+                continue
+
+            mask_packet = _build_msi_center_zone_mask_packet(
+                zone_index=zone_index,
+                pad_length=self._config.pad_length,
+            )
+            color_packet = _build_msi_center_color_packet(
+                color=clamped_color,
+                brightness=self._config.msi_center_brightness,
+                transition=self._config.msi_center_transition,
+                profile_slot=self._config.msi_center_profile_slot,
+                effect_code=self._config.msi_center_effect_code,
+                pad_length=self._config.pad_length,
+            )
+            try:
+                mask_written = self._write_packet(
+                    packet=mask_packet,
+                    hid_path=self._active_hid_path,
+                    write_method="feature",
+                )
+                color_written = self._write_packet(
+                    packet=color_packet,
+                    hid_path=self._active_hid_path,
+                    write_method="feature",
+                )
+            except (RuntimeError, OSError) as original_error:
+                if self._active_hid_path is None:
+                    raise
+                try:
+                    mask_written = self._write_packet(
+                        packet=mask_packet,
+                        hid_path=None,
+                        write_method="feature",
+                    )
+                    color_written = self._write_packet(
+                        packet=color_packet,
+                        hid_path=None,
+                        write_method="feature",
+                    )
+                except (RuntimeError, OSError):
+                    raise original_error from None
+                self._active_hid_path = None
+            if mask_written <= 0 or color_written <= 0:
+                raise RuntimeError(
+                    "MSI HID write returned non-positive byte count for zone packet pair "
+                    f"(zone={zone_index}, mask={mask_written}, color={color_written})."
+                )
+            self._last_zone_colors[zone_index] = clamped_color
+
     def reset_cache(self) -> None:
         self._last_zone_colors.clear()
+        self._last_global_color = None
 
     def reconnect(self) -> bool:
         self.reset_cache()
         self._active_hid_path = self._resolve_best_hid_path()
         return True
 
-    def _write_packet(self, *, packet: list[int], hid_path: str | None) -> int:
+    def _write_packet(
+        self,
+        *,
+        packet: list[int],
+        hid_path: str | None,
+        write_method: str,
+    ) -> int:
         return self._writer(
             report_bytes=packet,
             hid_path=hid_path,
             vendor_id=self._config.vendor_id,
             product_id=self._config.product_id,
-            write_method=self._config.write_method,
+            write_method=write_method,
         )
 
     def _resolve_best_hid_path(self) -> str | None:
@@ -170,6 +331,80 @@ def _build_packet(
             f"template byte length {len(values)} exceeds configured pad_length {pad_length}"
         )
     return values + [0] * (pad_length - len(values))
+
+
+def _build_msi_center_prep_packet(*, pad_length: int) -> list[int]:
+    packet = [0x02, 0x01] + [0xFF] * 32
+    if len(packet) > pad_length:
+        raise ValueError(
+            f"msi-center prep packet length {len(packet)} exceeds pad_length {pad_length}"
+        )
+    return packet + [0] * (pad_length - len(packet))
+
+
+def _build_msi_center_zone_mask_packet(*, zone_index: int, pad_length: int) -> list[int]:
+    if zone_index < 0 or zone_index > 31:
+        raise ValueError("msi-center zone mask supports zone_index in range 0..31")
+    mask_value = 1 << zone_index
+    packet = [
+        0x02,
+        0x01,
+        mask_value & 0xFF,
+        (mask_value >> 8) & 0xFF,
+        (mask_value >> 16) & 0xFF,
+        (mask_value >> 24) & 0xFF,
+    ]
+    if len(packet) > pad_length:
+        raise ValueError(
+            f"msi-center zone-mask packet length {len(packet)} exceeds pad_length {pad_length}"
+        )
+    return packet + [0] * (pad_length - len(packet))
+
+
+def _build_msi_center_color_packet(
+    *,
+    color: RgbColor,
+    brightness: int,
+    transition: int,
+    profile_slot: int,
+    effect_code: int,
+    pad_length: int,
+) -> list[int]:
+    clamped = color.clamped()
+    packet = [
+        0x02,
+        0x02,
+        0x01,
+        profile_slot,
+        0x02,
+        0x00,
+        transition,
+        effect_code,
+        0x01,
+        0x01,
+        0x00,
+        clamped.r,
+        clamped.g,
+        clamped.b,
+        brightness,
+        clamped.r,
+        clamped.g,
+        clamped.b,
+    ]
+    if len(packet) > pad_length:
+        raise ValueError(
+            f"msi-center color packet length {len(packet)} exceeds pad_length {pad_length}"
+        )
+    return packet + [0] * (pad_length - len(packet))
+
+
+def _select_global_color(*, zones: list[ZoneColor], strategy: str) -> RgbColor:
+    if not zones:
+        return RgbColor.black()
+    clamped_colors = [zone.color.clamped() for zone in zones]
+    if strategy == "average":
+        return RgbColor.average(clamped_colors)
+    return max(clamped_colors, key=lambda color: (color.r + color.g + color.b))
 
 
 def _tokenize_template(template: str) -> list[str]:

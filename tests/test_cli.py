@@ -14,6 +14,7 @@ from keylight.hid_discovery import HidDiscoveryAttempt, HidDiscoveryReport
 from keylight.models import RgbColor
 from keylight.runtime_config import load_live_command_defaults
 from keylight.write_zone import WriteZoneConfig, WriteZoneReport
+from keylight.zone_protocol_verify import ZoneProtocolVerifyReport, ZoneProtocolVerifyStep
 
 
 def _sample_probe_report() -> ProbeReport:
@@ -1972,6 +1973,8 @@ def test_main_build_runtime_config_command_writes_hardware_profile(
     assert loaded.backend == "msi-mystic-hid"
     assert loaded.hid_path == "test-path"
     assert loaded.mapper == "calibrated"
+    assert loaded.write_method == "feature"
+    assert loaded.pad_length == 64
     assert loaded.strict_preflight is True
     assert loaded.watchdog_interval_iterations == 300
     assert loaded.event_log_interval_iterations == 30
@@ -2190,6 +2193,74 @@ def test_main_discover_effects_routes_and_writes_report(
     exit_code = main(
         [
             "discover-effects",
+            "--hid-path",
+            "test-path",
+            "--output",
+            str(output_path),
+            "--step-delay-ms",
+            "0",
+            "--max-steps",
+            "1",
+        ]
+    )
+
+    assert exit_code == 0
+    assert captured["path"] == output_path
+
+
+def test_main_discover_zone_protocol_routes_and_writes_report(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    report = ZoneProtocolVerifyReport(
+        started_at_utc="2026-03-06T00:00:00+00:00",
+        finished_at_utc="2026-03-06T00:00:01+00:00",
+        hid_path="test-path",
+        vendor_id=None,
+        product_id=None,
+        pad_length=64,
+        total_steps=1,
+        success_count=1,
+        offsets=[3],
+        steps=[
+            ZoneProtocolVerifyStep(
+                step_index=1,
+                timestamp_utc="2026-03-06T00:00:00+00:00",
+                offset=3,
+                zone_index=0,
+                color=RgbColor(255, 0, 0),
+                original_value=88,
+                injected_value=0,
+                success=True,
+                prep_bytes_written=64,
+                color_bytes_written=64,
+                color_packet=[0] * 64,
+                error=None,
+            )
+        ],
+    )
+    captured: dict[str, Path] = {}
+
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli.run_zone_protocol_verify", lambda *_, **__: report)
+
+    def fake_write_zone_protocol_verify_report(
+        report_data: ZoneProtocolVerifyReport,
+        output_path: Path,
+    ) -> Path:
+        assert report_data == report
+        captured["path"] = output_path
+        return output_path
+
+    monkeypatch.setattr(
+        "keylight.cli.write_zone_protocol_verify_report",
+        fake_write_zone_protocol_verify_report,
+    )
+    output_path = tmp_path / "zone_protocol_verify.json"
+
+    exit_code = main(
+        [
+            "discover-zone-protocol",
             "--hid-path",
             "test-path",
             "--output",

@@ -436,3 +436,30 @@ This file tracks facts verified on-device and should stay strictly evidence-base
 - Result: Strict production workflow failed fast in readiness with explicit blockers (`calibration_profile_is_identity`, missing calibration workflow artifact, preflight not admin, unresolved access-denied conflicts).
 - Confidence: High
 - Notes: Confirms production command correctly blocks unsafe startup and surfaces remaining hardware/operator prerequisites clearly.
+
+- Date: 2026-03-06
+- Tool/Method: Wireshark + USBPcap capture while changing keyboard static color in MSI Center (`artifacts/RECORD .pcapng`).
+- Result: Confirmed working HID write protocol for `VID_1462&PID_1603` uses feature report ID 2 with a two-packet sequence: prep packet (`02 01` + `FF x32`) then color packet (`02 02 01 58 02 00 32 08 01 01 00 R G B 64 R G B`) padded to 64 bytes.
+- Confidence: High
+- Notes: This protocol produces visible keyboard color changes; previous simple `{report_id} {zone} {r} {g} {b}` packets were accepted by HID but did not change lighting state.
+
+- Date: 2026-03-06
+- Tool/Method: `python -m keylight.cli write-zone --backend hid-raw ... --write-method feature --packet-template "<captured template>"`.
+- Result: Manual replay of captured MSI Center packets successfully changed keyboard color in real time.
+- Confidence: High
+- Notes: `MsiMysticHidDriver` now supports a default `msi-center-feature-global` protocol path that emits this same two-packet feature sequence for runtime integration.
+
+- Date: 2026-03-06
+- Tool/Method: `python -m keylight.cli discover-zone-protocol --default-offsets --max-steps 32 --step-delay-ms 1200` on `VID_1462&PID_1603`.
+- Result: 16/16 writes succeeded but all tested byte-offset injections still changed full-keyboard color (no isolated zone behavior observed).
+- Confidence: High
+- Notes: Current packet family (`02 01 ...` prep + `02 02 ...` color) is confirmed as global/static control path only; true per-zone protocol likely uses different packet opcode/shape or a different interface.
+
+- Date: 2026-03-06
+- Tool/Method: Wireshark decode of `artifacts/ZonesRecord.pcapng` while setting zones to red one by one in MSI Center.
+- Result: Per-zone protocol identified. MSI Center emits repeated feature report pairs on report ID 2:
+  - Zone-select mask packet: `02 01 <mask-byte0> <mask-byte1> <mask-byte2> <mask-byte3> ...` (single-bit mask for zone index 0..23, little-endian).
+  - Zone-color packet: `02 02 01 58 02 00 32 08 01 01 00 R G B 64 R G B ...`.
+  - 24 unique masks observed (`1 << zone_index`), 600 mask packets + 600 color packets in capture.
+- Confidence: High
+- Notes: This is a true zone-targeting path. Driver now includes `msi-center-feature-zones` mode and defaults to it.
