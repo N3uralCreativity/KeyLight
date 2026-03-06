@@ -14,10 +14,6 @@ Default Tray View :
 
 ![Demo](docs/Screenshot-2026-03-06-035210.png)
 
-
-
-
-![Demo](https://github.com/N3uralCreativity/KeyLight/archive/refs/heads/master.zip)
 Initial target hardware:
 - MSI Vector 16 HX AI A2XW
 - 24-zone RGB keyboard
