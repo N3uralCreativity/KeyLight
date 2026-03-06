@@ -149,9 +149,34 @@ Use `--max-preflight-age-seconds` and `--max-live-analysis-age-seconds` to block
 .\.venv\Scripts\python.exe -m keylight.cli write-zone --backend msi-mystic-hid --hid-path "<PATH>" --zone-index 0 --zone-count 24 --color 255,0,0 --strict-preflight --aggressive-msi-close
 ```
 
-## Next Focus
+## Wireshark Reverse Engineering Summary
 
-1. Complete final physical 24-zone calibration profile on hardware and lock it in `config/calibration/final.json`.
-2. Add non-grid zone geometry mapping tuned to the MSI keyboard layout.
-3. Run long-run (8h+) validation using `live_report.json`, watchdog snapshots, and JSONL event logs.
-4. Build tray/GUI controls for start/stop/profile switching.
+- Capture source:
+  Wireshark + USBPcap on `USBPcap3`, targeting HID device `VID=1462 PID=1603` (`MysticLight MS-1603`).
+- Capture files:
+  `artifacts/RECORD .pcapng` (global/static color changes) and `artifacts/ZonesRecord.pcapng` (zone-by-zone edits).
+- Filter used for HID writes:
+  `usb.device_address==3 && usbhid.setup.bRequest==0x09 && usb.data_fragment`
+- Fields analyzed:
+  frame number/time, `usbhid.setup.wValue`, report ID/type, payload bytes (`usb.data_fragment`).
+
+- What was found in `RECORD .pcapng`:
+  HID Set_Report feature writes (`wValue=0x0302`, ReportID=2) with two packets:
+  `0201...` prep packet then `0202...` color packet.
+  This path changed full-keyboard color only.
+
+- What was found in `ZonesRecord.pcapng`:
+  MSI Center used paired feature writes for per-zone updates:
+  `0201 <bitmask-le32> ...` followed by
+  `0202 01 58 02 00 32 08 01 01 00 R G B 64 R G B ...`
+  Analysis showed 24 unique masks (`1 << zone_index`) and repeated mask+color pairs per zone edit.
+  Dataset counts: 600 mask packets (`0201`) + 600 color packets (`0202`) on device address 3.
+
+- Protocol interpretation:
+  `0201` selects target zone(s) by little-endian bitmask.
+  `0202` applies color/effect values to the currently selected mask.
+  Effective per-zone control requires sending both packets in sequence per zone change.
+
+- Code impact from this analysis:
+  `MsiMysticHidDriver` now uses `msi-center-feature-zones` by default and emits zone-mask + color packet pairs.
+  Hardware sweep and live runtime are validated on MSI Vector 16 HX AI A2XW with visible per-zone updates.
