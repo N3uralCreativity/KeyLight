@@ -1,28 +1,122 @@
 ﻿{
     "strict_mode":  false,
-    "generated_at_utc":  "2026-03-06T02:27:12.9262745Z",
-    "detected":  {
-                     "ProcessName":  "logi_lamparray_service",
-                     "Id":  31088,
-                     "Category":  "RGB",
-                     "Mode":  "Close",
-                     "Reason":  "Ambient lamparray effect service can conflict."
-                 },
-    "resolutions":  {
-                        "ProcessName":  "logi_lamparray_service",
-                        "Id":  31088,
-                        "Category":  "RGB",
-                        "Mode":  "Close",
-                        "Status":  "Closed",
-                        "Note":  "Process terminated."
-                    },
+    "generated_at_utc":  "2026-03-30T23:58:16.8661008Z",
+    "detected":  [
+                     {
+                         "ProcessName":  "MSI.CentralServer",
+                         "Id":  12184,
+                         "Category":  "MSI",
+                         "Mode":  "Warn",
+                         "Reason":  "MSI lighting stack may contend with direct writes."
+                     },
+                     {
+                         "ProcessName":  "MSI.TerminalServer",
+                         "Id":  8680,
+                         "Category":  "MSI",
+                         "Mode":  "Warn",
+                         "Reason":  "MSI lighting stack may contend with direct writes."
+                     },
+                     {
+                         "ProcessName":  "MSI_Central_Service",
+                         "Id":  9664,
+                         "Category":  "MSI",
+                         "Mode":  "Warn",
+                         "Reason":  "MSI stack component may alter keyboard behavior."
+                     },
+                     {
+                         "ProcessName":  "MSIAPService",
+                         "Id":  9648,
+                         "Category":  "MSI",
+                         "Mode":  "Warn",
+                         "Reason":  "MSI stack component may alter keyboard behavior."
+                     },
+                     {
+                         "ProcessName":  "MSIService",
+                         "Id":  9640,
+                         "Category":  "MSI",
+                         "Mode":  "Warn",
+                         "Reason":  "MSI stack component may alter keyboard behavior."
+                     },
+                     {
+                         "ProcessName":  "LEDKeeper2",
+                         "Id":  33052,
+                         "Category":  "RGB",
+                         "Mode":  "Close",
+                         "Reason":  "MSI Mystic Light can override keyboard zones."
+                     },
+                     {
+                         "ProcessName":  "logi_lamparray_service",
+                         "Id":  24372,
+                         "Category":  "RGB",
+                         "Mode":  "Close",
+                         "Reason":  "Ambient lamparray effect service can conflict."
+                     }
+                 ],
+    "resolutions":  [
+                        {
+                            "ProcessName":  "MSI.CentralServer",
+                            "Id":  12184,
+                            "Category":  "MSI",
+                            "Mode":  "Warn",
+                            "Status":  "WarnOnly",
+                            "Note":  "Warn-only MSI mode."
+                        },
+                        {
+                            "ProcessName":  "MSI.TerminalServer",
+                            "Id":  8680,
+                            "Category":  "MSI",
+                            "Mode":  "Warn",
+                            "Status":  "WarnOnly",
+                            "Note":  "Warn-only MSI mode."
+                        },
+                        {
+                            "ProcessName":  "MSI_Central_Service",
+                            "Id":  9664,
+                            "Category":  "MSI",
+                            "Mode":  "Warn",
+                            "Status":  "WarnOnly",
+                            "Note":  "Warn-only MSI mode."
+                        },
+                        {
+                            "ProcessName":  "MSIAPService",
+                            "Id":  9648,
+                            "Category":  "MSI",
+                            "Mode":  "Warn",
+                            "Status":  "WarnOnly",
+                            "Note":  "Warn-only MSI mode."
+                        },
+                        {
+                            "ProcessName":  "MSIService",
+                            "Id":  9640,
+                            "Category":  "MSI",
+                            "Mode":  "Warn",
+                            "Status":  "WarnOnly",
+                            "Note":  "Warn-only MSI mode."
+                        },
+                        {
+                            "ProcessName":  "LEDKeeper2",
+                            "Id":  33052,
+                            "Category":  "RGB",
+                            "Mode":  "Close",
+                            "Status":  "Closed",
+                            "Note":  "Process terminated."
+                        },
+                        {
+                            "ProcessName":  "logi_lamparray_service",
+                            "Id":  24372,
+                            "Category":  "RGB",
+                            "Mode":  "Close",
+                            "Status":  "Closed",
+                            "Note":  "Process terminated."
+                        }
+                    ],
     "close_conflicts":  true,
-    "unresolved_count":  0,
+    "unresolved_count":  5,
     "access_denied_count":  0,
-    "detected_count":  1,
+    "detected_count":  7,
     "include_overlay_conflicts":  true,
-    "closed_count":  1,
-    "warn_count":  0,
-    "aggressive_msi_close":  true,
+    "closed_count":  2,
+    "warn_count":  5,
+    "aggressive_msi_close":  false,
     "is_admin":  true
 }

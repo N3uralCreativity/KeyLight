@@ -7,12 +7,18 @@ from keylight.runtime_config import LiveCommandDefaults
 
 def render_live_defaults_toml(defaults: LiveCommandDefaults, *, output_path: Path) -> str:
     output_dir = output_path.parent.resolve()
+    palette_items = ", ".join(
+        f'"{_escape_toml(value)}"' for value in defaults.audio_palette
+    )
     lines = [
         "[app]",
         f"fps = {defaults.fps}",
         f"rows = {defaults.rows}",
         f"columns = {defaults.columns}",
         f"iterations = {defaults.iterations}",
+        "",
+        "[mode]",
+        f'source = "{_escape_toml(defaults.mode_source)}"',
         "",
         "[capture]",
         f'backend = "{_escape_toml(defaults.capturer)}"',
@@ -37,6 +43,22 @@ def render_live_defaults_toml(defaults: LiveCommandDefaults, *, output_path: Pat
             'calibration_profile = "'
             f'{_escape_toml(_path_text(defaults.calibration_profile, base_dir=output_dir))}"'
         ),
+        "",
+        "[audio]",
+        f'input_kind = "{_escape_toml(defaults.audio_input_kind)}"',
+        f'device_id = "{_escape_toml(defaults.audio_device_id or "")}"',
+        f'sound_effect = "{_escape_toml(defaults.sound_effect)}"',
+        f"sample_rate_hz = {defaults.audio_sample_rate_hz}",
+        f"frame_size = {defaults.audio_frame_size}",
+        f"sensitivity = {defaults.audio_sensitivity}",
+        f"attack_alpha = {defaults.audio_attack_alpha}",
+        f"decay_alpha = {defaults.audio_decay_alpha}",
+        f"noise_floor = {defaults.audio_noise_floor}",
+        f"bass_gain = {defaults.audio_bass_gain}",
+        f"mid_gain = {defaults.audio_mid_gain}",
+        f"treble_gain = {defaults.audio_treble_gain}",
+        f'zone_layout = "{_escape_toml(defaults.audio_zone_layout)}"',
+        f"palette = [{palette_items}]",
         "",
         "[smoothing]",
         f"enabled = {_toml_bool(defaults.smoothing_enabled)}",

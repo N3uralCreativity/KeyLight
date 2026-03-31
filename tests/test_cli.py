@@ -11,7 +11,7 @@ from keylight.drivers.probe import ProbeReport
 from keylight.drivers.simulated import SimulatedKeyboardDriver
 from keylight.effect_verify import EffectVerificationReport, EffectVerificationStep
 from keylight.hid_discovery import HidDiscoveryAttempt, HidDiscoveryReport
-from keylight.models import RgbColor
+from keylight.models import RgbColor, ZoneColor
 from keylight.runtime_config import load_live_command_defaults
 from keylight.write_zone import WriteZoneConfig, WriteZoneReport
 from keylight.zone_protocol_verify import ZoneProtocolVerifyReport, ZoneProtocolVerifyStep
@@ -65,7 +65,7 @@ def test_main_run_command_executes_pipeline(capsys: pytest.CaptureFixture[str]) 
 
 
 def test_main_sweep_command_executes(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
 
     exit_code = main(["sweep", "--zone-count", "4", "--loops", "1", "--delay-ms", "0"])
 
@@ -73,7 +73,7 @@ def test_main_sweep_command_executes(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_main_sweep_command_executes_msi_backend(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     monkeypatch.setattr(
         "keylight.cli._build_keyboard_driver",
         lambda **_: SimulatedKeyboardDriver(),
@@ -163,7 +163,7 @@ def test_main_calibrate_zones_writes_observed_order_template(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     template_path = tmp_path / "observed_template.txt"
     sweep_output = tmp_path / "calibrate_sweep.json"
     workflow_output = tmp_path / "calibrate_report.json"
@@ -201,7 +201,7 @@ def test_main_calibrate_zones_builds_profile_from_observed_order(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     profile_output = tmp_path / "final_profile.json"
     workflow_output = tmp_path / "calibrate_report.json"
 
@@ -238,7 +238,7 @@ def test_main_calibrate_zones_runs_verification_sweep(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     profile_output = tmp_path / "final_profile.json"
     verify_output = tmp_path / "verify_sweep.json"
     workflow_output = tmp_path / "calibrate_report.json"
@@ -280,7 +280,7 @@ def test_main_calibrate_zones_verify_uses_existing_profile(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     profile_output = tmp_path / "final_profile.json"
     profile_output.write_text(
         json.dumps(
@@ -326,7 +326,7 @@ def test_main_calibrate_zones_verify_without_profile_skips(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     workflow_output = tmp_path / "calibrate_report.json"
 
     exit_code = main(
@@ -358,7 +358,7 @@ def test_main_calibrate_zones_runs_live_verification(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     profile_output = tmp_path / "final_profile.json"
     live_output = tmp_path / "live_verify_report.json"
     workflow_output = tmp_path / "calibrate_report.json"
@@ -408,7 +408,7 @@ def test_main_calibrate_zones_live_verification_without_profile_skips(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     workflow_output = tmp_path / "calibrate_report.json"
 
     exit_code = main(
@@ -440,7 +440,7 @@ def test_main_calibrate_zones_live_verification_uses_existing_profile(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     profile_output = tmp_path / "final_profile.json"
     profile_output.write_text(
         json.dumps(
@@ -602,7 +602,7 @@ def test_main_live_command_executes_with_mock_capturer(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     output_path = tmp_path / "live_report.json"
 
     exit_code = main(
@@ -632,7 +632,7 @@ def test_main_live_command_duration_seconds_overrides_iterations(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     output_path = tmp_path / "live_report.json"
 
     exit_code = main(
@@ -668,7 +668,7 @@ def test_main_live_command_restore_on_exit_updates_report(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
 
     class _TrackingDriver:
         def __init__(self) -> None:
@@ -720,7 +720,7 @@ def test_main_live_command_restore_on_exit_failure_returns_nonzero(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
 
     class _FailOnRestoreDriver:
         def __init__(self) -> None:
@@ -766,7 +766,7 @@ def test_main_live_command_restore_on_exit_failure_returns_nonzero(
 def test_main_live_command_rejects_non_positive_duration(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
 
     exit_code = main(
         [
@@ -794,7 +794,7 @@ def test_main_live_command_writes_watchdog_snapshot(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     output_path = tmp_path / "live_report.json"
     watchdog_output = tmp_path / "live_watchdog.json"
 
@@ -830,7 +830,7 @@ def test_main_live_command_writes_event_log(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     output_path = tmp_path / "live_report.json"
     event_log_output = tmp_path / "events.jsonl"
 
@@ -866,7 +866,7 @@ def test_main_live_command_reads_defaults_from_config_file(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     config_path = tmp_path / "live.toml"
     watchdog_path = tmp_path / "watchdog.json"
     event_log_path = tmp_path / "events.jsonl"
@@ -931,11 +931,75 @@ def test_main_live_command_reads_defaults_from_config_file(
     assert content["restore_applied"] is True
 
 
+def test_main_live_command_executes_sound_mode(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
+
+    class _FakeAudioReader:
+        def __init__(self) -> None:
+            self.resolved_device_info = type(
+                "DeviceInfo",
+                (),
+                {"id": "speaker:Desk Speakers"},
+            )()
+
+        def read_input(self):  # type: ignore[no-untyped-def]
+            return object()
+
+        def close(self) -> None:
+            return None
+
+    class _FakeRenderer:
+        zone_count = 4
+
+        def render(self, _payload):  # type: ignore[no-untyped-def]
+            return [
+                ZoneColor(zone_index=0, color=RgbColor(255, 0, 0)),
+                ZoneColor(zone_index=1, color=RgbColor(0, 255, 0)),
+                ZoneColor(zone_index=2, color=RgbColor(0, 0, 255)),
+                ZoneColor(zone_index=3, color=RgbColor(255, 255, 0)),
+            ]
+
+    monkeypatch.setattr("keylight.cli._build_audio_reader", lambda **_: _FakeAudioReader())
+    monkeypatch.setattr("keylight.cli._build_sound_renderer", lambda **_: _FakeRenderer())
+    output_path = tmp_path / "live_sound.json"
+
+    exit_code = main(
+        [
+            "live",
+            "--mode",
+            "sound",
+            "--backend",
+            "simulated",
+            "--rows",
+            "2",
+            "--columns",
+            "2",
+            "--fps",
+            "120",
+            "--iterations",
+            "2",
+            "--output",
+            str(output_path),
+            "--no-preflight",
+        ]
+    )
+
+    assert exit_code == 0
+    content = json.loads(output_path.read_text(encoding="utf-8"))
+    assert content["mode"] == "sound"
+    assert content["audio_input_kind"] == "output-loopback"
+    assert content["sound_effect"] == "spectrum"
+    assert content["audio_device_id"] == "speaker:Desk Speakers"
+
+
 def test_main_live_command_uses_calibrated_mapper_from_config(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     profile_path = tmp_path / "zones.json"
     profile_path.write_text(
         json.dumps(
@@ -1981,6 +2045,57 @@ def test_main_build_runtime_config_command_writes_hardware_profile(
     assert loaded.restore_on_exit is True
 
 
+def test_main_build_runtime_config_command_writes_sound_profile(tmp_path: Path) -> None:
+    base_path = tmp_path / "base.toml"
+    base_path.write_text(
+        "\n".join(
+            [
+                "[app]",
+                "rows = 2",
+                "columns = 12",
+                "fps = 30",
+                "iterations = 300",
+                "",
+                "[driver]",
+                'backend = "simulated"',
+            ]
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "sound.toml"
+
+    exit_code = main(
+        [
+            "build-runtime-config",
+            "--base",
+            str(base_path),
+            "--output",
+            str(output_path),
+            "--mode",
+            "sound",
+            "--audio-input-kind",
+            "microphone",
+            "--audio-device-id",
+            "microphone:Room Mic",
+            "--sound-effect",
+            "waveform",
+            "--audio-zone-layout",
+            "center-out",
+            "--audio-palette",
+            "0,0,255;255,0,0",
+        ]
+    )
+
+    assert exit_code == 0
+    loaded = load_live_command_defaults(output_path, must_exist=True)
+    assert loaded.mode_source == "sound"
+    assert loaded.audio_input_kind == "microphone"
+    assert loaded.audio_device_id == "microphone:Room Mic"
+    assert loaded.sound_effect == "waveform"
+    assert loaded.audio_zone_layout == "center-out"
+    assert loaded.audio_palette == ("0,0,255", "255,0,0")
+
+
 def test_main_capture_observed_order_command_writes_profile(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -2028,6 +2143,28 @@ def test_main_list_monitors_command(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
     exit_code = main(["list-monitors"])
+
+    assert exit_code == 0
+
+
+def test_main_list_audio_devices_command(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "keylight.cli.list_audio_devices",
+        lambda: [
+            type(
+                "AudioDeviceInfo",
+                (),
+                {
+                    "id": "speaker:Desk Speakers",
+                    "name": "Desk Speakers",
+                    "kind": "output-loopback",
+                    "is_default": True,
+                },
+            )()
+        ],
+    )
+
+    exit_code = main(["list-audio-devices"])
 
     assert exit_code == 0
 
@@ -2114,7 +2251,7 @@ def test_main_discover_hid_routes_and_writes_report(
     )
     captured: dict[str, Path] = {}
 
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     monkeypatch.setattr("keylight.cli.run_hid_discovery", lambda _: report)
 
     def fake_write_hid_discovery_report(
@@ -2173,7 +2310,7 @@ def test_main_discover_effects_routes_and_writes_report(
     )
     captured: dict[str, Path] = {}
 
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     monkeypatch.setattr("keylight.cli.run_effect_verification", lambda *_, **__: report)
 
     def fake_write_effect_verification_report(
@@ -2241,7 +2378,7 @@ def test_main_discover_zone_protocol_routes_and_writes_report(
     )
     captured: dict[str, Path] = {}
 
-    monkeypatch.setattr("keylight.cli._run_preflight", lambda _: 0)
+    monkeypatch.setattr("keylight.cli._run_preflight", lambda *_args, **_kwargs: 0)
     monkeypatch.setattr("keylight.cli.run_zone_protocol_verify", lambda *_, **__: report)
 
     def fake_write_zone_protocol_verify_report(
@@ -2274,3 +2411,4 @@ def test_main_discover_zone_protocol_routes_and_writes_report(
 
     assert exit_code == 0
     assert captured["path"] == output_path
+

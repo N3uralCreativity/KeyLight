@@ -1,6 +1,7 @@
 param(
   [bool]$WithHardware = $false,
   [bool]$WithCapture = $true,
+  [bool]$WithAudio = $true,
   [bool]$WithUi = $true
 )
 
@@ -20,8 +21,11 @@ if ($WithHardware) {
 if ($WithCapture) {
   $extras += "capture"
 }
+if ($WithAudio) {
+  $extras += "audio"
+}
 if ($WithUi) {
-  $extras += "ui"
+  $extras += "ui-premium"
 }
 
 $extraSpec = ($extras -join ",")

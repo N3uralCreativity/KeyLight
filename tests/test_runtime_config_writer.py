@@ -8,6 +8,7 @@ from keylight.runtime_config_writer import write_live_defaults_toml
 def test_write_live_defaults_toml_round_trip(tmp_path: Path) -> None:
     defaults = replace(
         LiveCommandDefaults(),
+        mode_source="sound",
         backend="msi-mystic-hid",
         mapper="calibrated",
         capturer="windows-mss",
@@ -16,6 +17,11 @@ def test_write_live_defaults_toml_round_trip(tmp_path: Path) -> None:
         hid_path="\\\\?\\HID#VID_1462&PID_1603#demo",
         vendor_id="0x1462",
         product_id="0x1603",
+        sound_effect="stereo-split",
+        audio_input_kind="microphone",
+        audio_device_id="microphone:Room Mic",
+        audio_zone_layout="mirror",
+        audio_palette=("0,0,255", "0,255,0", "255,0,0"),
         strict_preflight=True,
         watchdog_interval_iterations=30,
         watchdog_output=(tmp_path / "artifacts" / "watchdog.json").resolve(),
@@ -29,11 +35,17 @@ def test_write_live_defaults_toml_round_trip(tmp_path: Path) -> None:
 
     loaded = load_live_command_defaults(output_path, must_exist=True)
 
+    assert loaded.mode_source == "sound"
     assert loaded.backend == "msi-mystic-hid"
     assert loaded.mapper == "calibrated"
     assert loaded.zone_profile == (tmp_path / "mapping" / "zones.json").resolve()
     assert loaded.calibration_profile == (tmp_path / "calibration" / "final.json").resolve()
     assert loaded.hid_path == "\\\\?\\HID#VID_1462&PID_1603#demo"
+    assert loaded.audio_input_kind == "microphone"
+    assert loaded.audio_device_id == "microphone:Room Mic"
+    assert loaded.sound_effect == "stereo-split"
+    assert loaded.audio_zone_layout == "mirror"
+    assert loaded.audio_palette == ("0,0,255", "0,255,0", "255,0,0")
     assert loaded.strict_preflight is True
     assert loaded.watchdog_interval_iterations == 30
     assert loaded.event_log_interval_iterations == 15

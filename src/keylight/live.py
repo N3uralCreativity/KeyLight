@@ -7,7 +7,14 @@ from datetime import UTC, datetime
 from pathlib import Path
 from time import perf_counter, sleep
 
-from keylight.contracts import KeyboardLightingDriver, ScreenCapturer, ZoneMapper
+from keylight.contracts import (
+    InputReader,
+    KeyboardLightingDriver,
+    ScreenCapturer,
+    ZoneMapper,
+    ZoneRenderer,
+)
+from keylight.models import CapturedFrame, ZoneColor
 from keylight.processing import ZoneColorProcessor
 
 
@@ -22,6 +29,10 @@ class LiveRuntimeConfig:
     reconnect_attempts: int = 1
     watchdog_interval_iterations: int = 0
     event_log_interval_iterations: int = 0
+    mode: str = "screen"
+    audio_input_kind: str | None = None
+    audio_device_id: str | None = None
+    sound_effect: str | None = None
 
     def validate(self) -> None:
         if self.fps <= 0:
@@ -38,6 +49,20 @@ class LiveRuntimeConfig:
             raise ValueError("watchdog_interval_iterations must be >= 0")
         if self.event_log_interval_iterations < 0:
             raise ValueError("event_log_interval_iterations must be >= 0")
+        if self.mode not in {"screen", "sound"}:
+            raise ValueError("mode must be 'screen' or 'sound'")
+        if self.mode == "sound":
+            if self.audio_input_kind not in {"output-loopback", "microphone"}:
+                raise ValueError(
+                    "audio_input_kind must be 'output-loopback' or 'microphone'"
+                )
+            if self.sound_effect not in {
+                "bass-pulse",
+                "spectrum",
+                "stereo-split",
+                "waveform",
+            }:
+                raise ValueError("sound_effect is invalid")
 
     @property
     def frame_interval_seconds(self) -> float:
@@ -73,6 +98,10 @@ class LiveRuntimeReport:
     avg_overrun_ms: float
     watchdog_emits: int
     event_log_emits: int
+    mode: str = "screen"
+    audio_input_kind: str | None = None
+    audio_device_id: str | None = None
+    sound_effect: str | None = None
     restore_requested: bool = False
     restore_applied: bool = False
     restore_error: str | None = None
@@ -102,6 +131,10 @@ class LiveRuntimeReport:
             "avg_overrun_ms": self.avg_overrun_ms,
             "watchdog_emits": self.watchdog_emits,
             "event_log_emits": self.event_log_emits,
+            "mode": self.mode,
+            "audio_input_kind": self.audio_input_kind,
+            "audio_device_id": self.audio_device_id,
+            "sound_effect": self.sound_effect,
             "restore_requested": self.restore_requested,
             "restore_applied": self.restore_applied,
             "restore_error": self.restore_error,
@@ -178,20 +211,49 @@ class LiveEventLogEntry:
         }
 
 
+class _LegacyCaptureAdapter:
+    def __init__(self, capturer: ScreenCapturer) -> None:
+        self._capturer = capturer
+
+    def read_input(self) -> CapturedFrame:
+        return self._capturer.capture_frame()
+
+
+class _LegacyMapperAdapter:
+    def __init__(self, mapper: ZoneMapper) -> None:
+        self._mapper = mapper
+
+    def render(self, payload: object) -> list[ZoneColor]:
+        if not isinstance(payload, CapturedFrame):
+            raise TypeError("Legacy mapper requires CapturedFrame input.")
+        return self._mapper.map_frame(payload)
+
+
 class LiveRuntime:
     def __init__(
         self,
         *,
-        capturer: ScreenCapturer,
-        mapper: ZoneMapper,
         processor: ZoneColorProcessor,
         driver: KeyboardLightingDriver,
         config: LiveRuntimeConfig,
+        reader: InputReader | None = None,
+        renderer: ZoneRenderer | None = None,
+        capturer: ScreenCapturer | None = None,
+        mapper: ZoneMapper | None = None,
         watchdog_callback: Callable[[LiveWatchdogSnapshot], None] | None = None,
         event_log_callback: Callable[[LiveEventLogEntry], None] | None = None,
     ) -> None:
-        self._capturer = capturer
-        self._mapper = mapper
+        if reader is None:
+            if capturer is None:
+                raise ValueError("LiveRuntime requires reader or capturer.")
+            reader = _LegacyCaptureAdapter(capturer)
+        if renderer is None:
+            if mapper is None:
+                raise ValueError("LiveRuntime requires renderer or mapper.")
+            renderer = _LegacyMapperAdapter(mapper)
+
+        self._reader = reader
+        self._renderer = renderer
         self._processor = processor
         self._driver = driver
         self._config = config
@@ -311,12 +373,12 @@ class LiveRuntime:
 
             try:
                 capture_start = perf_counter()
-                frame = self._capturer.capture_frame()
+                payload = self._reader.read_input()
                 capture_elapsed = perf_counter() - capture_start
                 total_capture += capture_elapsed
 
                 map_start = perf_counter()
-                zones = self._mapper.map_frame(frame)
+                zones = self._renderer.render(payload)
                 map_elapsed = perf_counter() - map_start
                 total_map += map_elapsed
 
@@ -452,6 +514,10 @@ class LiveRuntime:
             avg_overrun_ms=(total_overrun / overrun_divisor) * 1000.0,
             watchdog_emits=watchdog_emits,
             event_log_emits=event_log_emits,
+            mode=self._config.mode,
+            audio_input_kind=self._config.audio_input_kind,
+            audio_device_id=self._config.audio_device_id,
+            sound_effect=self._config.sound_effect,
         )
 
 

@@ -43,6 +43,41 @@ def test_run_readiness_check_passes_with_skipped_optional_checks(tmp_path: Path)
     assert report.zone_count == 4
 
 
+def test_run_readiness_check_uses_rows_columns_for_sound_mode(tmp_path: Path) -> None:
+    config_path = tmp_path / "runtime.toml"
+    config_path.write_text(
+        "\n".join(
+            [
+                "[app]",
+                "rows = 2",
+                "columns = 12",
+                "",
+                "[mode]",
+                'source = "sound"',
+                "",
+                "[mapping]",
+                'backend = "calibrated"',
+                "",
+                "[driver]",
+                'backend = "simulated"',
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    report = run_readiness_check(
+        ReadinessCheckConfig(
+            config_path=config_path,
+            require_preflight_clean=False,
+            require_live_analysis_pass=False,
+            require_hid_present=False,
+        )
+    )
+
+    assert report.passed is True
+    assert report.zone_count == 24
+
+
 def test_run_readiness_check_fails_on_calibration_zone_mismatch(tmp_path: Path) -> None:
     profile_path = tmp_path / "calibration.json"
     profile_path.write_text(

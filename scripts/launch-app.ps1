@@ -47,7 +47,7 @@ $pythonCliPath = Join-Path $repoRoot ".venv\Scripts\python.exe"
 if (-not (Test-Path $pythonCliPath)) {
     Write-Host "Virtual environment missing. Bootstrapping..."
     $bootstrapScript = Join-Path $repoRoot "scripts/bootstrap.ps1"
-    powershell -ExecutionPolicy Bypass -File $bootstrapScript -WithHardware $true -WithCapture $true
+    powershell -ExecutionPolicy Bypass -File $bootstrapScript -WithHardware $true -WithCapture $true -WithAudio $true
     if (-not (Test-Path $pythonCliPath)) {
         throw "Bootstrap did not produce .venv\\Scripts\\python.exe"
     }
@@ -61,7 +61,7 @@ if (-not (Test-Path $pythonGuiPath)) {
 $depsCheck = @'
 import importlib.util
 
-modules = ['hid', 'mss', 'pystray', 'PIL']
+modules = ['hid', 'mss', 'PySide6', 'numpy', 'soundcard']
 missing = [name for name in modules if importlib.util.find_spec(name) is None]
 print(','.join(missing))
 '@
@@ -69,8 +69,8 @@ $missingModulesRaw = & $pythonCliPath -c $depsCheck
 $missingModules = "$missingModulesRaw".Trim()
 if ($missingModules -ne "") {
     Write-Host "Missing modules: $missingModules"
-    Write-Host "Installing required app dependencies (hw,capture,ui)..."
-    & $pythonCliPath -m pip install -e ".[hw,capture,ui]"
+    Write-Host "Installing required app dependencies (hw,capture,audio,ui-premium)..."
+    & $pythonCliPath -m pip install -e ".[hw,capture,audio,ui-premium]"
     if ($LASTEXITCODE -ne 0) {
         throw "Dependency installation failed."
     }

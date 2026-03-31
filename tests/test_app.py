@@ -2,12 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from keylight.app import (
-    RUN_UNTIL_STOP_ITERATIONS,
-    AppLiveRunConfig,
-    build_live_command,
-    select_preferred_msi_hid_path,
-)
+from keylight.app import AppLiveRunConfig, build_live_command, select_preferred_msi_hid_path
 from keylight.drivers.hid_raw import HidDeviceInfo
 
 
@@ -62,65 +57,34 @@ def test_select_preferred_msi_hid_path_prefers_vendor_usage_interface() -> None:
     assert selected == "preferred-msi"
 
 
-def test_build_live_command_contains_hardware_flags(tmp_path: Path) -> None:
+def test_build_live_command_uses_config_driven_launch(tmp_path: Path) -> None:
     config = AppLiveRunConfig(
-        hid_path="hid-path",
-        rows=2,
-        columns=12,
-        fps=20,
-        iterations=1200,
-        run_until_stopped=False,
-        monitor_index=1,
-        strict_preflight=True,
-        aggressive_msi_close=True,
+        config_path=tmp_path / "default.toml",
         output_path=tmp_path / "live_report.json",
     )
 
     command = build_live_command(python_executable="python", config=config)
 
-    assert command[:4] == ["python", "-m", "keylight.cli", "live"]
-    assert "--backend" in command
-    assert "--capturer" in command
-    assert "--strict-preflight" in command
-    assert "--aggressive-msi-close" in command
+    assert command == [
+        "python",
+        "-m",
+        "keylight.cli",
+        "live",
+        "--config",
+        str(tmp_path / "default.toml"),
+        "--output",
+        str(tmp_path / "live_report.json"),
+    ]
 
 
-def test_build_live_command_rejects_blank_hid_path(tmp_path: Path) -> None:
+def test_build_live_command_rejects_blank_config_path(tmp_path: Path) -> None:
     config = AppLiveRunConfig(
-        hid_path="   ",
-        rows=2,
-        columns=12,
-        fps=20,
-        iterations=1200,
-        run_until_stopped=False,
-        monitor_index=1,
-        strict_preflight=False,
-        aggressive_msi_close=False,
+        config_path=Path(""),
         output_path=tmp_path / "live_report.json",
     )
 
-    with pytest.raises(ValueError, match="HID path is required"):
+    with pytest.raises(ValueError, match="Config path is required"):
         build_live_command(python_executable="python", config=config)
-
-
-def test_build_live_command_run_until_stopped_uses_large_iterations(tmp_path: Path) -> None:
-    config = AppLiveRunConfig(
-        hid_path="hid-path",
-        rows=2,
-        columns=12,
-        fps=20,
-        iterations=1,
-        run_until_stopped=True,
-        monitor_index=1,
-        strict_preflight=False,
-        aggressive_msi_close=False,
-        output_path=tmp_path / "live_report.json",
-    )
-
-    command = build_live_command(python_executable="python", config=config)
-
-    iterations_pos = command.index("--iterations")
-    assert command[iterations_pos + 1] == str(RUN_UNTIL_STOP_ITERATIONS)
 
 
 def test_app_main_parser_supports_no_autostart() -> None:

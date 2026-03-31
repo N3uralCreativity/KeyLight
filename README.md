@@ -90,7 +90,7 @@ Start-KeyLight-App.cmd
 For one-click usage on Windows (no terminal commands), double-click `Start-KeyLight-App.cmd`.
 It requests Administrator elevation, auto-detects MSI HID path, autostarts live mode, and keeps running until manually stopped.
 Close button now minimizes to tray. Right-click tray icon for `Pause`, `Resume`, `Open Settings`, and `Exit`.
-On first run it may install missing app dependencies (`hw,capture,ui`) before showing the interface.
+On first run it may install missing app dependencies (`hw,capture,ui-premium`) before showing the interface.
 Launcher default is start hidden in tray. To start with the window visible, run `scripts\launch-app.ps1 -ShowWindow`.
 The launcher host is hidden by default (`powershell` hidden + `pythonw.exe`) so no admin console stays visible.
 

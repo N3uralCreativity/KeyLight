@@ -749,6 +749,8 @@ def write_readiness_report(report: ReadinessReport, output_path: Path) -> Path:
 
 
 def _resolve_zone_count(defaults: LiveCommandDefaults) -> int:
+    if defaults.mode_source == "sound":
+        return defaults.rows * defaults.columns
     if defaults.mapper == "grid":
         return defaults.rows * defaults.columns
     if defaults.mapper == "calibrated":

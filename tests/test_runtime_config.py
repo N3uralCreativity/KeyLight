@@ -16,11 +16,14 @@ def test_load_live_command_defaults_raises_for_missing_explicit_file(tmp_path: P
         load_live_command_defaults(tmp_path / "missing.toml", must_exist=True)
 
 
-def test_load_live_defaults_requires_profile_for_calibrated_mapper(tmp_path: Path) -> None:
+def test_load_live_defaults_requires_profile_for_screen_calibrated_mapper(tmp_path: Path) -> None:
     config_path = tmp_path / "runtime.toml"
     config_path.write_text(
         "\n".join(
             [
+                "[mode]",
+                'source = "screen"',
+                "",
                 "[mapping]",
                 'backend = "calibrated"',
             ]
@@ -30,6 +33,28 @@ def test_load_live_defaults_requires_profile_for_calibrated_mapper(tmp_path: Pat
 
     with pytest.raises(ValueError, match="mapping.zone_profile"):
         load_live_command_defaults(config_path, must_exist=True)
+
+
+def test_load_live_defaults_sound_mode_does_not_require_screen_profile(tmp_path: Path) -> None:
+    config_path = tmp_path / "runtime.toml"
+    config_path.write_text(
+        "\n".join(
+            [
+                "[mode]",
+                'source = "sound"',
+                "",
+                "[mapping]",
+                'backend = "calibrated"',
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    defaults = load_live_command_defaults(config_path, must_exist=True)
+
+    assert defaults.mode_source == "sound"
+    assert defaults.mapper == "calibrated"
+    assert defaults.zone_profile is None
 
 
 def test_load_live_command_defaults_reads_toml_values(tmp_path: Path) -> None:
@@ -42,6 +67,9 @@ def test_load_live_command_defaults_reads_toml_values(tmp_path: Path) -> None:
                 "columns = 8",
                 "fps = 45",
                 "iterations = 900",
+                "",
+                "[mode]",
+                'source = "sound"',
                 "",
                 "[capture]",
                 'backend = "mock"',
@@ -63,6 +91,22 @@ def test_load_live_command_defaults_reads_toml_values(tmp_path: Path) -> None:
                 "pad_length = 65",
                 'packet_template = "{report_id} 0xAA {zone} {r} {g} {b}"',
                 'calibration_profile = "profiles/final.json"',
+                "",
+                "[audio]",
+                'input_kind = "microphone"',
+                'device_id = "microphone:Room Mic"',
+                'sound_effect = "waveform"',
+                "sample_rate_hz = 44100",
+                "frame_size = 1024",
+                "sensitivity = 1.5",
+                "attack_alpha = 0.4",
+                "decay_alpha = 0.15",
+                "noise_floor = 0.05",
+                "bass_gain = 1.8",
+                "mid_gain = 1.2",
+                "treble_gain = 0.9",
+                'zone_layout = "center-out"',
+                'palette = ["0,0,255", "0,255,0", "255,0,0"]',
                 "",
                 "[smoothing]",
                 "enabled = true",
@@ -91,6 +135,7 @@ def test_load_live_command_defaults_reads_toml_values(tmp_path: Path) -> None:
 
     defaults = load_live_command_defaults(config_path, must_exist=True)
 
+    assert defaults.mode_source == "sound"
     assert defaults.rows == 3
     assert defaults.columns == 8
     assert defaults.fps == 45
@@ -111,6 +156,20 @@ def test_load_live_command_defaults_reads_toml_values(tmp_path: Path) -> None:
     assert defaults.pad_length == 65
     assert defaults.packet_template == "{report_id} 0xAA {zone} {r} {g} {b}"
     assert defaults.calibration_profile == (config_path.parent / "profiles/final.json").resolve()
+    assert defaults.audio_input_kind == "microphone"
+    assert defaults.audio_device_id == "microphone:Room Mic"
+    assert defaults.sound_effect == "waveform"
+    assert defaults.audio_sample_rate_hz == 44100
+    assert defaults.audio_frame_size == 1024
+    assert defaults.audio_sensitivity == 1.5
+    assert defaults.audio_attack_alpha == 0.4
+    assert defaults.audio_decay_alpha == 0.15
+    assert defaults.audio_noise_floor == 0.05
+    assert defaults.audio_bass_gain == 1.8
+    assert defaults.audio_mid_gain == 1.2
+    assert defaults.audio_treble_gain == 0.9
+    assert defaults.audio_zone_layout == "center-out"
+    assert defaults.audio_palette == ("0,0,255", "0,255,0", "255,0,0")
     assert defaults.smoothing_enabled is True
     assert defaults.smoothing_alpha == 0.4
     assert defaults.brightness_max_percent == 80
@@ -146,4 +205,20 @@ def test_load_live_defaults_rejects_invalid_restore_color(tmp_path: Path) -> Non
     )
 
     with pytest.raises(ValueError, match="runtime.restore_color"):
+        load_live_command_defaults(config_path, must_exist=True)
+
+
+def test_load_live_defaults_rejects_invalid_audio_palette(tmp_path: Path) -> None:
+    config_path = tmp_path / "runtime.toml"
+    config_path.write_text(
+        "\n".join(
+            [
+                "[audio]",
+                'palette = ["255,0,0"]',
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="audio.palette"):
         load_live_command_defaults(config_path, must_exist=True)

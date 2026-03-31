@@ -10,6 +10,11 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
+from keylight.audio_input import (
+    AudioInputConfig,
+    SoundCardAudioReader,
+    list_audio_devices,
+)
 from keylight.calibrate_zones import (
     CalibrateZonesReport,
     now_utc_iso,
@@ -71,6 +76,11 @@ from keylight.processing import ColorProcessingConfig, ZoneColorProcessor
 from keylight.readiness import ReadinessCheckConfig, run_readiness_check, write_readiness_report
 from keylight.runtime_config import LiveCommandDefaults, load_live_command_defaults
 from keylight.runtime_config_writer import write_live_defaults_toml
+from keylight.sound_reactive import (
+    SoundReactiveConfig,
+    SoundReactiveRenderer,
+    parse_palette_strings,
+)
 from keylight.sweep import SweepConfig, ZoneSweeper, write_sweep_report
 from keylight.write_zone import (
     WriteZoneConfig,
@@ -832,6 +842,12 @@ def _build_live_parser(defaults: LiveCommandDefaults) -> argparse.ArgumentParser
         help="TOML runtime config file",
     )
     parser.add_argument(
+        "--mode",
+        choices=["screen", "sound"],
+        default=defaults.mode_source,
+        help="Logical source mode for live runtime",
+    )
+    parser.add_argument(
         "--capturer",
         choices=["windows-mss", "mock"],
         default=defaults.capturer,
@@ -930,6 +946,90 @@ def _build_live_parser(defaults: LiveCommandDefaults) -> argparse.ArgumentParser
         type=Path,
         default=defaults.calibration_profile,
         help="Optional logical->hardware zone mapping profile",
+    )
+    parser.add_argument(
+        "--audio-input-kind",
+        choices=["output-loopback", "microphone"],
+        default=defaults.audio_input_kind,
+        help="Sound-reactive source kind",
+    )
+    parser.add_argument(
+        "--audio-device-id",
+        type=str,
+        default=defaults.audio_device_id,
+        help="Persisted device id, for example speaker:My Device",
+    )
+    parser.add_argument(
+        "--sound-effect",
+        choices=["spectrum", "bass-pulse", "waveform", "stereo-split"],
+        default=defaults.sound_effect,
+        help="Sound-reactive effect to render",
+    )
+    parser.add_argument(
+        "--audio-sample-rate-hz",
+        type=int,
+        default=defaults.audio_sample_rate_hz,
+        help="Audio capture sample rate",
+    )
+    parser.add_argument(
+        "--audio-frame-size",
+        type=int,
+        default=defaults.audio_frame_size,
+        help="Audio frame size per render step",
+    )
+    parser.add_argument(
+        "--audio-sensitivity",
+        type=float,
+        default=defaults.audio_sensitivity,
+        help="Audio level sensitivity multiplier",
+    )
+    parser.add_argument(
+        "--audio-attack-alpha",
+        type=float,
+        default=defaults.audio_attack_alpha,
+        help="Fast-rise smoothing coefficient 0..1",
+    )
+    parser.add_argument(
+        "--audio-decay-alpha",
+        type=float,
+        default=defaults.audio_decay_alpha,
+        help="Slow-fall smoothing coefficient 0..1",
+    )
+    parser.add_argument(
+        "--audio-noise-floor",
+        type=float,
+        default=defaults.audio_noise_floor,
+        help="Audio floor threshold 0..1",
+    )
+    parser.add_argument(
+        "--audio-bass-gain",
+        type=float,
+        default=defaults.audio_bass_gain,
+        help="Bass band gain",
+    )
+    parser.add_argument(
+        "--audio-mid-gain",
+        type=float,
+        default=defaults.audio_mid_gain,
+        help="Mid band gain",
+    )
+    parser.add_argument(
+        "--audio-treble-gain",
+        type=float,
+        default=defaults.audio_treble_gain,
+        help="Treble band gain",
+    )
+    parser.add_argument(
+        "--audio-zone-layout",
+        choices=["linear", "mirror", "center-out"],
+        default=defaults.audio_zone_layout,
+        help="Column arrangement for sound-reactive rendering",
+    )
+    parser.add_argument(
+        "--audio-palette",
+        type=str,
+        default=";".join(defaults.audio_palette),
+        help="Semicolon-separated RGB palette entries, for example 0,80,255;255,60,60",
     )
     parser.add_argument(
         "--smoothing-enabled",
@@ -1072,6 +1172,12 @@ def _option_present(argv: list[str], option: str) -> bool:
 
 def _build_list_monitors_parser() -> argparse.ArgumentParser:
     return argparse.ArgumentParser(description="List Windows monitors visible to mss")
+
+
+def _build_list_audio_devices_parser() -> argparse.ArgumentParser:
+    return argparse.ArgumentParser(
+        description="List audio input devices available for sound-reactive mode"
+    )
 
 
 def _build_analyze_live_parser() -> argparse.ArgumentParser:
@@ -1390,6 +1496,7 @@ def _build_runtime_config_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Preset: strict preflight, watchdog/event logs, restore-on-exit",
     )
+    parser.add_argument("--mode", choices=["screen", "sound"], default=None)
     parser.add_argument("--backend", choices=["simulated", "msi-mystic-hid"], default=None)
     parser.add_argument("--mapper", choices=["grid", "calibrated"], default=None)
     parser.add_argument("--capturer", choices=["windows-mss", "mock"], default=None)
@@ -1402,6 +1509,37 @@ def _build_runtime_config_parser() -> argparse.ArgumentParser:
     parser.add_argument("--columns", type=int, default=None)
     parser.add_argument("--fps", type=int, default=None)
     parser.add_argument("--iterations", type=int, default=None)
+    parser.add_argument(
+        "--audio-input-kind",
+        choices=["output-loopback", "microphone"],
+        default=None,
+    )
+    parser.add_argument("--audio-device-id", type=str, default=None)
+    parser.add_argument(
+        "--sound-effect",
+        choices=["spectrum", "bass-pulse", "waveform", "stereo-split"],
+        default=None,
+    )
+    parser.add_argument("--audio-sample-rate-hz", type=int, default=None)
+    parser.add_argument("--audio-frame-size", type=int, default=None)
+    parser.add_argument("--audio-sensitivity", type=float, default=None)
+    parser.add_argument("--audio-attack-alpha", type=float, default=None)
+    parser.add_argument("--audio-decay-alpha", type=float, default=None)
+    parser.add_argument("--audio-noise-floor", type=float, default=None)
+    parser.add_argument("--audio-bass-gain", type=float, default=None)
+    parser.add_argument("--audio-mid-gain", type=float, default=None)
+    parser.add_argument("--audio-treble-gain", type=float, default=None)
+    parser.add_argument(
+        "--audio-zone-layout",
+        choices=["linear", "mirror", "center-out"],
+        default=None,
+    )
+    parser.add_argument(
+        "--audio-palette",
+        type=str,
+        default=None,
+        help="Semicolon-separated RGB palette entries",
+    )
     parser.add_argument("--watchdog-interval", type=int, default=None)
     parser.add_argument("--event-log-interval", type=int, default=None)
     parser.add_argument(
@@ -2421,6 +2559,7 @@ def _live_command(argv: list[str]) -> int:
             print(f"Preflight failed with exit code {preflight_exit_code}.")
             return preflight_exit_code
 
+    audio_reader: SoundCardAudioReader | None = None
     try:
         vendor_id = _parse_optional_int(args.vendor_id)
         product_id = _parse_optional_int(args.product_id)
@@ -2447,21 +2586,55 @@ def _live_command(argv: list[str]) -> int:
             def event_log_callback(entry: LiveEventLogEntry) -> None:
                 write_live_event_log_entry(entry, event_log_output)
 
-        capturer = _build_capturer(
-            capturer_name=args.capturer,
-            monitor_index=args.monitor_index,
-            capture_width=args.capture_width,
-            capture_height=args.capture_height,
-        )
-        mapper = _build_mapper(
-            mapper_name=args.mapper,
-            rows=args.rows,
-            columns=args.columns,
-            zone_profile_path=args.zone_profile,
-        )
+        capturer = None
+        mapper = None
+        reader = None
+        renderer = None
+        zone_count: int
+        resolved_audio_device_id: str | None = None
+
+        if args.mode == "screen":
+            capturer = _build_capturer(
+                capturer_name=args.capturer,
+                monitor_index=args.monitor_index,
+                capture_width=args.capture_width,
+                capture_height=args.capture_height,
+            )
+            mapper = _build_mapper(
+                mapper_name=args.mapper,
+                rows=args.rows,
+                columns=args.columns,
+                zone_profile_path=args.zone_profile,
+            )
+            zone_count = _mapper_zone_count(mapper)
+        else:
+            audio_reader = _build_audio_reader(
+                input_kind=args.audio_input_kind,
+                device_id=args.audio_device_id,
+                sample_rate_hz=args.audio_sample_rate_hz,
+                frame_size=args.audio_frame_size,
+            )
+            reader = audio_reader
+            renderer = _build_sound_renderer(
+                rows=args.rows,
+                columns=args.columns,
+                effect=args.sound_effect,
+                sensitivity=args.audio_sensitivity,
+                attack_alpha=args.audio_attack_alpha,
+                decay_alpha=args.audio_decay_alpha,
+                noise_floor=args.audio_noise_floor,
+                bass_gain=args.audio_bass_gain,
+                mid_gain=args.audio_mid_gain,
+                treble_gain=args.audio_treble_gain,
+                zone_layout=args.audio_zone_layout,
+                palette_text=args.audio_palette,
+            )
+            zone_count = _renderer_zone_count(renderer)
+            resolved_audio_device_id = resolve_audio_device_id_for_reader(audio_reader)
+
         driver = _build_keyboard_driver(
             backend=args.backend,
-            zone_count=_mapper_zone_count(mapper),
+            zone_count=zone_count,
             hid_path=args.hid_path,
             vendor_id=vendor_id,
             product_id=product_id,
@@ -2479,6 +2652,8 @@ def _live_command(argv: list[str]) -> int:
             )
         )
         runtime = LiveRuntime(
+            reader=reader,
+            renderer=renderer,
             capturer=capturer,
             mapper=mapper,
             processor=processor,
@@ -2493,11 +2668,17 @@ def _live_command(argv: list[str]) -> int:
                 reconnect_attempts=args.reconnect_attempts,
                 watchdog_interval_iterations=args.watchdog_interval,
                 event_log_interval_iterations=args.event_log_interval,
+                mode=args.mode,
+                audio_input_kind=(args.audio_input_kind if args.mode == "sound" else None),
+                audio_device_id=resolved_audio_device_id,
+                sound_effect=(args.sound_effect if args.mode == "sound" else None),
             ),
             watchdog_callback=watchdog_callback,
             event_log_callback=event_log_callback,
         )
     except (ValueError, RuntimeError) as error:
+        if audio_reader is not None:
+            audio_reader.close()
         print(f"Live runtime configuration error: {error}")
         return 2
 
@@ -2507,16 +2688,21 @@ def _live_command(argv: list[str]) -> int:
         report = runtime.run()
     except Exception as error:
         runtime_error = error
+    finally:
+        if audio_reader is not None:
+            resolved_audio_device_id = (
+                resolve_audio_device_id_for_reader(audio_reader) or resolved_audio_device_id
+            )
+            audio_reader.close()
 
     restore_applied = False
     restore_error: str | None = None
     if args.restore_on_exit:
         try:
             assert restore_color is not None
-            restore_zone_count = _mapper_zone_count(mapper)
             restore_payload = [
                 ZoneColor(zone_index=index, color=restore_color)
-                for index in range(restore_zone_count)
+                for index in range(zone_count)
             ]
             driver.apply_zone_colors(restore_payload)
             restore_applied = True
@@ -2534,6 +2720,9 @@ def _live_command(argv: list[str]) -> int:
     assert report is not None
     report = replace(
         report,
+        audio_device_id=(
+            resolved_audio_device_id if args.mode == "sound" else report.audio_device_id
+        ),
         restore_requested=args.restore_on_exit,
         restore_applied=restore_applied,
         restore_error=restore_error,
@@ -2541,6 +2730,7 @@ def _live_command(argv: list[str]) -> int:
 
     output_path = write_live_runtime_report(report, args.output)
     print("Live runtime completed.")
+    print(f"Mode: {report.mode}")
     if args.duration_seconds is not None:
         print(
             f"Duration mode: seconds={args.duration_seconds} "
@@ -2559,6 +2749,11 @@ def _live_command(argv: list[str]) -> int:
         "Recovery: "
         f"attempts={report.recovery_attempts} successes={report.recovery_successes}"
     )
+    if report.mode == "sound":
+        print(
+            f"Audio: kind={report.audio_input_kind} "
+            f"device={report.audio_device_id or ''} effect={report.sound_effect}"
+        )
     print(f"avg_capture_ms={report.avg_capture_ms:.2f}")
     print(f"avg_map_ms={report.avg_map_ms:.2f}")
     print(f"avg_process_ms={report.avg_process_ms:.2f}")
@@ -2583,6 +2778,25 @@ def _live_command(argv: list[str]) -> int:
         print(json.dumps(report.to_dict(), indent=2))
 
     return 1 if report.aborted or report.restore_error is not None else 0
+
+
+def _list_audio_devices_command(argv: list[str]) -> int:
+    _build_list_audio_devices_parser().parse_args(argv)
+    try:
+        devices = list_audio_devices()
+    except RuntimeError as error:
+        print(f"List audio devices failed: {error}")
+        return 1
+
+    if not devices:
+        print("No audio devices detected.")
+        return 0
+
+    print("Audio devices:")
+    for device in devices:
+        default_marker = " (default)" if device.is_default else ""
+        print(f"- [{device.kind}] {device.id}{default_marker} :: {device.name}")
+    return 0
 
 
 def _list_monitors_command(argv: list[str]) -> int:
@@ -2760,6 +2974,7 @@ def _runtime_config_command(argv: list[str]) -> int:
         if args.set_hardware_mode:
             defaults = replace(
                 defaults,
+                mode_source="screen",
                 backend="msi-mystic-hid",
                 mapper="calibrated",
                 capturer="windows-mss",
@@ -2779,6 +2994,8 @@ def _runtime_config_command(argv: list[str]) -> int:
                 restore_color="0,0,0",
             )
 
+        if args.mode is not None:
+            defaults = replace(defaults, mode_source=args.mode)
         if args.backend is not None:
             defaults = replace(defaults, backend=args.backend)
         if args.mapper is not None:
@@ -2803,6 +3020,38 @@ def _runtime_config_command(argv: list[str]) -> int:
             defaults = replace(defaults, fps=args.fps)
         if args.iterations is not None:
             defaults = replace(defaults, iterations=args.iterations)
+        if args.audio_input_kind is not None:
+            defaults = replace(defaults, audio_input_kind=args.audio_input_kind)
+        if args.audio_device_id is not None:
+            defaults = replace(defaults, audio_device_id=args.audio_device_id.strip() or None)
+        if args.sound_effect is not None:
+            defaults = replace(defaults, sound_effect=args.sound_effect)
+        if args.audio_sample_rate_hz is not None:
+            defaults = replace(defaults, audio_sample_rate_hz=args.audio_sample_rate_hz)
+        if args.audio_frame_size is not None:
+            defaults = replace(defaults, audio_frame_size=args.audio_frame_size)
+        if args.audio_sensitivity is not None:
+            defaults = replace(defaults, audio_sensitivity=args.audio_sensitivity)
+        if args.audio_attack_alpha is not None:
+            defaults = replace(defaults, audio_attack_alpha=args.audio_attack_alpha)
+        if args.audio_decay_alpha is not None:
+            defaults = replace(defaults, audio_decay_alpha=args.audio_decay_alpha)
+        if args.audio_noise_floor is not None:
+            defaults = replace(defaults, audio_noise_floor=args.audio_noise_floor)
+        if args.audio_bass_gain is not None:
+            defaults = replace(defaults, audio_bass_gain=args.audio_bass_gain)
+        if args.audio_mid_gain is not None:
+            defaults = replace(defaults, audio_mid_gain=args.audio_mid_gain)
+        if args.audio_treble_gain is not None:
+            defaults = replace(defaults, audio_treble_gain=args.audio_treble_gain)
+        if args.audio_zone_layout is not None:
+            defaults = replace(defaults, audio_zone_layout=args.audio_zone_layout)
+        if args.audio_palette is not None:
+            palette = _parse_palette_list(args.audio_palette)
+            defaults = replace(
+                defaults,
+                audio_palette=tuple(f"{color.r},{color.g},{color.b}" for color in palette),
+            )
         if args.watchdog_interval is not None:
             defaults = replace(defaults, watchdog_interval_iterations=args.watchdog_interval)
         if args.event_log_interval is not None:
@@ -2823,7 +3072,7 @@ def _runtime_config_command(argv: list[str]) -> int:
     print("Runtime config built.")
     print(f"Output: {output_path.resolve()}")
     print(
-        f"backend={validated.backend} mapper={validated.mapper} "
+        f"mode={validated.mode_source} backend={validated.backend} mapper={validated.mapper} "
         f"capturer={validated.capturer} strict_preflight={validated.strict_preflight}"
     )
     return 0
@@ -3178,6 +3427,23 @@ def _build_capturer(
     raise ValueError(f"Unsupported capturer '{capturer_name}'")
 
 
+def _build_audio_reader(
+    *,
+    input_kind: str,
+    device_id: str | None,
+    sample_rate_hz: int,
+    frame_size: int,
+) -> SoundCardAudioReader:
+    return SoundCardAudioReader(
+        AudioInputConfig(
+            input_kind=input_kind,
+            device_id=device_id,
+            sample_rate_hz=sample_rate_hz,
+            frame_size=frame_size,
+        )
+    )
+
+
 def _build_mapper(
     *,
     mapper_name: str,
@@ -3195,10 +3461,50 @@ def _build_mapper(
     raise ValueError(f"Unsupported mapper '{mapper_name}'")
 
 
+def _build_sound_renderer(
+    *,
+    rows: int,
+    columns: int,
+    effect: str,
+    sensitivity: float,
+    attack_alpha: float,
+    decay_alpha: float,
+    noise_floor: float,
+    bass_gain: float,
+    mid_gain: float,
+    treble_gain: float,
+    zone_layout: str,
+    palette_text: str,
+) -> SoundReactiveRenderer:
+    return SoundReactiveRenderer(
+        SoundReactiveConfig(
+            rows=rows,
+            columns=columns,
+            effect=effect,
+            sensitivity=sensitivity,
+            attack_alpha=attack_alpha,
+            decay_alpha=decay_alpha,
+            noise_floor=noise_floor,
+            bass_gain=bass_gain,
+            mid_gain=mid_gain,
+            treble_gain=treble_gain,
+            zone_layout=zone_layout,
+            palette=_parse_palette_list(palette_text),
+        )
+    )
+
+
 def _mapper_zone_count(mapper: GridZoneMapper | CalibratedZoneMapper) -> int:
     zone_count = getattr(mapper, "zone_count", None)
     if not isinstance(zone_count, int) or zone_count <= 0:
         raise ValueError("mapper zone_count is invalid.")
+    return zone_count
+
+
+def _renderer_zone_count(renderer: SoundReactiveRenderer) -> int:
+    zone_count = getattr(renderer, "zone_count", None)
+    if not isinstance(zone_count, int) or zone_count <= 0:
+        raise ValueError("renderer zone_count is invalid.")
     return zone_count
 
 
@@ -3243,6 +3549,22 @@ def _build_keyboard_driver(
             f"zone_count {zone_count}"
         )
     return CalibratedDriver(base_driver=base_driver, profile=profile)
+
+
+def resolve_audio_device_id_for_reader(reader: SoundCardAudioReader | None) -> str | None:
+    if reader is None:
+        return None
+    info = reader.resolved_device_info
+    if info is not None:
+        return info.id
+    return None
+
+
+def _parse_palette_list(value: str) -> tuple[RgbColor, ...]:
+    parts = [part.strip() for part in value.split(";") if part.strip()]
+    if not parts:
+        raise ValueError("audio-palette must include at least two RGB entries.")
+    return parse_palette_strings(parts)
 
 
 def _parse_csv_str_list(value: str) -> list[str]:
@@ -3377,6 +3699,8 @@ def main(argv: list[str] | None = None) -> int:
             return _build_zone_profile_command(raw_args[1:])
         if raw_args[0] == "live":
             return _live_command(raw_args[1:])
+        if raw_args[0] == "list-audio-devices":
+            return _list_audio_devices_command(raw_args[1:])
         if raw_args[0] == "list-monitors":
             return _list_monitors_command(raw_args[1:])
         if raw_args[0] == "analyze-live":

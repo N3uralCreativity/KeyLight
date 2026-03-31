@@ -19,9 +19,16 @@ hw = [
 capture = [
   "mss>=10.1.0",
 ]
+audio = [
+  "numpy>=2.2.0",
+  "SoundCard>=0.4.3",
+]
 ui = [
   "pillow>=10.3.0",
   "pystray>=0.19.5",
+]
+ui-premium = [
+  "PySide6>=6.8.0",
 ]
 dev = [
   "mypy>=1.15.0",
